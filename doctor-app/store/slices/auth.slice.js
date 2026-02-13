@@ -334,6 +334,20 @@ export const authGoogleSignIn = createAsyncThunk(
         });
       }
 
+      if (error?.code === '8' || error?.message === 'INTERNAL_ERROR') {
+        return rejectWithValue({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message:
+              'Google Sign-In failed on emulator. Use an emulator with Google Play, add a Google account in Settings, or try on a real device.',
+          },
+          message:
+            'Google Sign-In not available here. Try on a real device or use an emulator with Google Play.',
+          data: null,
+          statusCode: 500,
+        });
+      }
+
       // Handle backend errors
       if (error?.data || error?.statusCode) {
         return rejectWithValue(error);
