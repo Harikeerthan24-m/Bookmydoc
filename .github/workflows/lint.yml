@@ -1,0 +1,33 @@
+# Lint + test on PR and push to main. No local hooks – zero slowdown.
+name: Lint & Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install root deps
+        run: npm ci
+
+      - name: Install doctor-app deps
+        run: npm ci --prefix doctor-app
+
+      - name: Install doctor-web deps
+        run: npm ci --prefix doctor-web
+
+      - name: Lint & Test
+        run: npm run ci

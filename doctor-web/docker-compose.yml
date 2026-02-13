@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  doctor-app:
+    build:
+      context: ./
+      dockerfile: deploy/Dockerfile
+      target: dev
+    # image: node:20.11-alpine
+    working_dir: /app
+    restart: always
+    command: npm run start:dev
+    volumes:
+      - .:/app
+    ports:
+      - '${PORT}:8080'
+    env_file:
+      - .env
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 8080
+      PUBLISH_PORT: ${PORT}
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://0.0.0.0:8080/health/live']
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  doctor-ui:
+    build:
+      context: ./
+      dockerfile: deploy/Dockerfile
+      target: dev
+    # image: node:20.11-alpine
+    working_dir: /app
+    restart: always
+    command: npm run start:ui
+    depends_on:
+      doctor-app:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    ports:
+      - '3001:8080'
+    env_file:
+      - .env
+    environment:
+      PORT: 8080
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:8080']
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

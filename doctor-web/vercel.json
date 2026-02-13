@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "outputDirectory": "ui/build",
+  "functions": {
+    "api/index.js": {
+      "memory": 1024
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.js"
+    },
+    {
+      "src": "/health/(.*)",
+      "dest": "api/index.js"
+    },
+    {
+      "src": "/api-docs/(.*)",
+      "dest": "api/index.js"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map|json))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "buildCommand": "npm run build:ui && npm run build && npm run copy:api",
+  "installCommand": "npm install && npm install --prefix ui"
+}

@@ -1,0 +1,22 @@
+{
+  "name": "doctor-appointment",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "commitlint": "commitlint --edit",
+    "lint:staged": "lint-staged && npm run lint:staged --prefix doctor-web",
+    "lint": "npm run lint --prefix doctor-web",
+    "lint:all": "npm run lint --prefix doctor-app && npm run lint --prefix doctor-web",
+    "test": "npm run test --prefix doctor-web",
+    "ci": "npm run lint:all && npm run test"
+  },
+  "author": "tarekmonjur",
+  "license": "ISC",
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "concurrently": "^9.0.1",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.7"
+  }
+}

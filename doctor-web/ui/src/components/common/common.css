@@ -1,0 +1,19 @@
+.danger-text {
+  color: red;
+}
+
+.success-text {
+  color: red;
+}
+
+.warning-text {
+  color: red;
+}
+
+.text-md {
+  font-size: medium;
+}
+
+.text-sm {
+  font-size: smaller;
+}

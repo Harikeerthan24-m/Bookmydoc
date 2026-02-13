@@ -1,0 +1,23 @@
+# Build outputs
+dist/
+build/
+ui/build/
+ui/dist/
+coverage/
+
+# Dependencies
+node_modules/
+ui/node_modules/
+
+# Generated files
+*.min.js
+*.min.ts
+*.bundle.js
+*.chunk.js
+
+# Public assets
+ui/public/
+
+# Package files
+package-lock.json
+yarn.lock

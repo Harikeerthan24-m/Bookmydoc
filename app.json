@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "487b4b65-57a0-46c8-b82f-e553b32f1754"
+      }
+    },
+    "android": {
+      "package": "com.harikeerthan24.doctorappointment"
+    }
+  }
+}
