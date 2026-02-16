@@ -37,7 +37,7 @@ const AvailableDoctors = () => {
       <View style={styles.topContainer}>
         <Text
           style={styles.specialty}
-        >{`Looking For Your ${item?.expertiseList?.join(', ')} Doctors`}</Text>
+        >{`${item?.expertiseList?.join(', ')}`}</Text>
       </View>
       <View style={styles.bottomContainer}>
         <View style={styles.bottomLeftContainer}>
@@ -115,12 +115,13 @@ const styles = StyleSheet.create({
   },
   topContainer: {
     marginBottom: 10,
+    alignSelf: 'stretch',
   },
   specialty: {
     fontSize: 16,
     fontWeight: '500',
     color: 'white',
-    marginRight: 82,
+    textAlign: 'left',
   },
   bottomContainer: {
     flexDirection: 'row',

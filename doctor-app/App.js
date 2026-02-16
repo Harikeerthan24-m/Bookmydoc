@@ -2,8 +2,17 @@
  * @format
  */
 import Constants from 'expo-constants';
-const { APP_ENV, ANDROID_WEB_CLIENT_ID, IOS_WEB_CLIENT_ID } =
-  Constants.expoConfig.extra || {};
+import {
+  APP_ENV as ENV_APP_ENV,
+  ANDROID_WEB_CLIENT_ID as ENV_ANDROID_WEB_CLIENT_ID,
+  IOS_WEB_CLIENT_ID as ENV_IOS_WEB_CLIENT_ID,
+} from '@env';
+
+// Try to get from Constants first (production builds), fall back to @env (development)
+const APP_ENV = Constants.expoConfig?.extra?.APP_ENV || ENV_APP_ENV || 'development';
+const ANDROID_WEB_CLIENT_ID = Constants.expoConfig?.extra?.ANDROID_WEB_CLIENT_ID || ENV_ANDROID_WEB_CLIENT_ID;
+const IOS_WEB_CLIENT_ID = Constants.expoConfig?.extra?.IOS_WEB_CLIENT_ID || ENV_IOS_WEB_CLIENT_ID;
+
 const __DEV__ = (APP_ENV || 'development') === 'development';
 import React, { StrictMode, useEffect } from 'react';
 import { Platform, StatusBar } from 'react-native';
@@ -14,6 +23,7 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
+import firebase from '@react-native-firebase/app';
 import Layout from './Layout';
 import SplashScreen from './screens/SplashScreen';
 import { persistedStore, store } from './store';
@@ -21,6 +31,14 @@ import Global_Styles from './utils/Global_Styles';
 
 const WEB_CLIENT_ID =
   Platform.OS === 'android' ? ANDROID_WEB_CLIENT_ID : IOS_WEB_CLIENT_ID;
+
+// Initialize Firebase (React Native Firebase auto-initializes from google-services.json/GoogleService-Info.plist)
+// This import ensures Firebase is available before any other modules try to use it
+if (!firebase.apps.length) {
+  console.log('⚠️ [FIREBASE] No Firebase app initialized. Check google-services.json configuration.');
+} else {
+  console.log('✅ [FIREBASE] Firebase app initialized successfully:', firebase.app().name);
+}
 
 export default function APP() {
   useEffect(() => {

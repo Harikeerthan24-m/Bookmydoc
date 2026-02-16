@@ -39,7 +39,7 @@ const TopBar = ({ navigation }) => {
 
       <TouchableOpacity
         style={homeStyles.notificationIconContainer}
-        onPress={() => navigation.navigate('ChatScreen')}
+        onPress={() => navigation.navigate('Main', { screen: 'Chat' })}
       >
         <Ionicons name="chatbubbles-outline" size={30} />
       </TouchableOpacity>

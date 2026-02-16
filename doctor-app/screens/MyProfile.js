@@ -85,9 +85,16 @@ const MyProfile = ({ navigation }) => {
 
   useEffect(() => {
     if (!loading && error) {
+      const title = typeof error?.message === 'string' ? error.message : 'Error';
+      const detail = error?.error?.message;
+      const textBody = Array.isArray(detail)
+        ? detail.join(', ')
+        : typeof detail === 'string'
+          ? detail
+          : '';
       AlertNotification({
-        title: error?.message,
-        textBody: error?.error?.message || '',
+        title,
+        textBody: textBody || 'Something went wrong. Please try again.',
         variant: ALERT_DIALOG,
         type: ALERT_DANGER,
         button: 'Close',

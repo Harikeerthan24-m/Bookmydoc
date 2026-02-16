@@ -35,6 +35,7 @@ const ASK_AI_PLACEHOLDERS = [
 const Search = ({ onSearch, onSpecialistsSelected }) => {
   const [inputText, setInputText] = useState('');
   const [isAskAIMode, setIsAskAIMode] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [aiResults, setAiResults] = useState(null);
   const [error, setError] = useState(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -82,6 +83,7 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
       handleAnalyze();
     } else {
       onSearch?.(inputText);
+      setHasSearched(true);
     }
   };
 
@@ -245,7 +247,7 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
       {/* Search / Ask AI Bar */}
       <View style={[styles.searchBar, isAskAIMode && styles.searchBarAskAI]}>
         <Ionicons
-          name={isAskAIMode ? 'sparkles' : 'search'}
+          name="search"
           size={24}
           color={isAskAIMode ? Global_Styles.PrimaryColour : '#979797'}
         />
@@ -258,6 +260,7 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
             onChangeText={(value) => {
               setInputText(value);
               setError(null);
+              if (!value.trim()) setHasSearched(false);
             }}
             onSubmitEditing={handleSearchSubmit}
             multiline={isAskAIMode}
@@ -313,22 +316,51 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity
-          style={[styles.actionButton, isAskAIMode && styles.analyzeButton]}
-          onPress={handleSearchSubmit}
-          disabled={isLoading || isRecording}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : isAskAIMode ? (
-            <>
-              <Ionicons name="sparkles" size={20} color="white" />
-              <Text style={styles.analyzeButtonText}>Analyze</Text>
-            </>
-          ) : (
-            <Ionicons name="filter" size={24} color="white" />
-          )}
-        </TouchableOpacity>
+        {!isAskAIMode ? (
+          !hasSearched ? (
+            <TouchableOpacity
+              style={[styles.askAIOnBar, styles.actionButton]}
+              onPress={toggleAskAIMode}
+            >
+              <Ionicons
+                name="sparkles"
+                size={22}
+                color={Global_Styles.PrimaryColour}
+              />
+            </TouchableOpacity>
+          ) : null
+        ) : (
+          <>
+            <TouchableOpacity
+              style={[styles.askAIOnBar, styles.askAIOnBarActive]}
+              onPress={toggleAskAIMode}
+            >
+              <Ionicons
+                name="close"
+                size={22}
+                color={Global_Styles.PrimaryColour}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.analyzeButton]}
+              onPress={handleSearchSubmit}
+              disabled={isLoading || isRecording}
+            >
+              {isLoading ? (
+                <ActivityIndicator
+                  size="small"
+                  color={Global_Styles.PrimaryColour}
+                />
+              ) : (
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color={Global_Styles.PrimaryColour}
+                />
+              )}
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       {/* Recording indicator */}
@@ -353,28 +385,6 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
         </View>
       )}
 
-      {/* Ask AI Toggle / Results Section */}
-      <View style={styles.actionsRow}>
-        <TouchableOpacity
-          style={[styles.askAIToggle, isAskAIMode && styles.askAIToggleActive]}
-          onPress={toggleAskAIMode}
-        >
-          <Ionicons
-            name="sparkles"
-            size={18}
-            color={isAskAIMode ? 'white' : Global_Styles.PrimaryColour}
-          />
-          <Text
-            style={[
-              styles.askAIToggleText,
-              isAskAIMode && styles.askAIToggleTextActive,
-            ]}
-          >
-            {isAskAIMode ? 'Ask AI (tap to exit)' : 'Ask AI'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Error */}
       {error && (
         <View style={styles.errorBanner}>
@@ -382,7 +392,9 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
           <Text style={styles.errorText}>
             {typeof error === 'string'
               ? error
-              : error?.message || 'Something went wrong'}
+              : typeof error?.message === 'string'
+                ? error.message
+                : 'Something went wrong'}
           </Text>
         </View>
       )}
@@ -488,49 +500,29 @@ const styles = StyleSheet.create({
     minWidth: 48,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#18A0FB',
-    gap: 6,
+    backgroundColor: 'transparent',
     marginLeft: 8,
     alignSelf: 'center',
   },
   analyzeButton: {
     height: 42,
-    minWidth: 96,
+    minWidth: 48,
     paddingHorizontal: 14,
   },
-  analyzeButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
-  },
-  actionsRow: {
-    marginTop: 12,
-  },
-  askAIToggle: {
+  askAIOnBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    minWidth: 48,
+    height: 42,
     borderRadius: 10,
-    backgroundColor: '#FFF',
-    borderWidth: 1.5,
-    borderColor: Global_Styles.PrimaryColour,
-    borderStyle: 'dashed',
-    gap: 8,
+    backgroundColor: 'transparent',
+    marginLeft: 8,
+    alignSelf: 'center',
   },
-  askAIToggleActive: {
-    backgroundColor: Global_Styles.PrimaryColour,
-    borderColor: Global_Styles.PrimaryColour,
-    borderStyle: 'solid',
-  },
-  askAIToggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Global_Styles.PrimaryColour,
-  },
-  askAIToggleTextActive: {
-    color: 'white',
+  askAIOnBarActive: {
+    backgroundColor: 'transparent',
   },
   errorBanner: {
     flexDirection: 'row',

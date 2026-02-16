@@ -138,11 +138,14 @@ const SignupScreen = ({ navigation }) => {
         loading: false,
       }));
     } catch (err) {
-      const message = err?.message ?? '';
-      console.log('signup failed: ', err);
+      const message = err?.message ?? 'Signup failed';
+      const detail = err?.error?.message ?? (typeof err?.error === 'string' ? err.error : '');
+      if (__DEV__) {
+        console.warn('[Signup] Failed:', message, err?.statusCode, detail);
+      }
       setFormValidation({
-        errors: err?.error ? err?.error : {},
-        message: message ?? 'Signup failed',
+        errors: {},
+        message,
         loading: false,
       });
     }

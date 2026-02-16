@@ -1,29 +1,120 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  FlatList,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const ChatScreen = ({ navigation }) => {
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#ffffff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chat Screen</Text>
-      </View>
+const WELCOME_TEXT = 'Your AI Health care Assistant';
 
-      <View style={styles.chatContainer}>
-        <View style={styles.messageBubble}>
-          <Image
-            style={styles.backgroundimage}
-            source={require('../assets/images/chat.png')}
-          />
-          <Text style={styles.messageText}>
-            AI-powered Chat System Coming Soon!
+const ChatScreen = () => {
+  const [messageText, setMessageText] = useState('');
+  const [messages, setMessages] = useState([]);
+  const flatListRef = useRef(null);
+  const showWelcome = messages.length === 0;
+
+  const handleSend = useCallback(() => {
+    const trimmed = messageText.trim();
+    if (!trimmed) return;
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), text: trimmed, isUser: true },
+    ]);
+    setMessageText('');
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }, [messageText]);
+
+  const renderMessage = useCallback(({ item }) => {
+    const isUser = item.isUser;
+    return (
+      <View
+        style={[
+          styles.bubbleRow,
+          isUser ? styles.bubbleRowUser : styles.bubbleRowAssistant,
+        ]}
+      >
+        <View
+          style={[
+            styles.bubble,
+            isUser ? styles.bubbleUser : styles.bubbleAssistant,
+          ]}
+        >
+          <Text
+            style={[
+              styles.bubbleText,
+              isUser ? styles.bubbleTextUser : styles.bubbleTextAssistant,
+            ]}
+          >
+            {item.text}
           </Text>
         </View>
       </View>
-    </View>
+    );
+  }, []);
+
+  const canSend = messageText.trim().length > 0;
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+      <View style={styles.chatContainer}>
+        {showWelcome ? (
+          <View style={styles.welcomeContainer}>
+            <View style={styles.welcomeBubble}>
+              <Text style={styles.welcomeText}>{WELCOME_TEXT}</Text>
+            </View>
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            renderItem={renderMessage}
+            contentContainerStyle={styles.listContent}
+            onContentSizeChange={() => {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }}
+          />
+        )}
+      </View>
+
+      <View style={styles.inputBar}>
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.input}
+            placeholder="How are you feeling today!!"
+            placeholderTextColor="#999"
+            value={messageText}
+            onChangeText={setMessageText}
+            onSubmitEditing={handleSend}
+            blurOnSubmit={false}
+          />
+          <TouchableOpacity
+            style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
+            onPress={handleSend}
+            activeOpacity={0.7}
+            disabled={!canSend}
+          >
+            <Ionicons
+              name="send"
+              size={22}
+              color={canSend ? '#ffffff' : '#999'}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -32,49 +123,98 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 50,
-    paddingBottom: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#009EFF',
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#ffffff',
-    flex: 1,
-    textAlign: 'center',
-  },
   chatContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  welcomeContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
-  messageBubble: {
-    // backgroundColor: '#f0f8ff',
+  welcomeBubble: {
     borderRadius: 15,
     padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
     width: '100%',
-    height: '90%',
   },
-  messageText: {
+  welcomeText: {
     fontSize: 24,
     fontWeight: '600',
     color: '#333',
     textAlign: 'center',
-    marginBottom: 30,
   },
-  backgroundimage: {
-    width: '100%',
-    height: '50%',
+  listContent: {
+    paddingVertical: 16,
+    paddingBottom: 24,
+  },
+  bubbleRow: {
+    marginBottom: 12,
+    maxWidth: '80%',
+  },
+  bubbleRowUser: {
+    alignSelf: 'flex-end',
+  },
+  bubbleRowAssistant: {
+    alignSelf: 'flex-start',
+  },
+  bubble: {
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  bubbleUser: {
+    backgroundColor: '#009EFF',
+  },
+  bubbleAssistant: {
+    backgroundColor: '#f0f4f8',
+  },
+  bubbleText: {
+    fontSize: 16,
+  },
+  bubbleTextUser: {
+    color: '#ffffff',
+  },
+  bubbleTextAssistant: {
+    color: '#333',
+  },
+  inputBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#ffffff',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f4f8',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    paddingLeft: 16,
+    paddingRight: 4,
+    paddingVertical: 4,
+  },
+  input: {
+    flex: 1,
+    height: 40,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: '#333',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#009EFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#e0e0e0',
   },
 });
 

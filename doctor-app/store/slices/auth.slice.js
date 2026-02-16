@@ -832,7 +832,27 @@ export const AuthSlice = createSlice({
         let errorMessage;
         const code =
           serverErrorObj?.error?.code || serverErrorObj?.error?.statusCode;
-        if (code === 'auth/invalid-credential') {
+        const statusCode = serverErrorObj?.statusCode;
+
+        if (statusCode === 408 || code === 'ERR_TIMEOUT') {
+          message = 'Request timed out.';
+          errorMessage =
+            'The server took too long to respond. Ensure the backend is running and try again.';
+        } else if (statusCode === 499 || code === 'ERR_CANCELED') {
+          message = 'Request canceled.';
+          errorMessage =
+            'The request was canceled. Check that the backend server is running and the app API URL/port in .env is correct.';
+        } else if (
+          code === 'ERR_NETWORK' ||
+          code === 'ECONNREFUSED' ||
+          code === 'ECONNRESET' ||
+          serverErrorObj?.message === 'Connection failed.'
+        ) {
+          message = 'Connection failed.';
+          errorMessage =
+            serverErrorObj?.error?.message ||
+            'Unable to reach the server. Check your connection and that the backend is running.';
+        } else if (code === 'auth/invalid-credential') {
           message = 'Invalid Credentials.';
           errorMessage = 'Please try again with valid credentials';
         } else if (code === 'auth/user-not-found') {
@@ -852,12 +872,15 @@ export const AuthSlice = createSlice({
           message = 'Email already exists.';
           errorMessage = 'Please try with using another email address';
         } else {
-          message = 'Something went wrong';
+          message = serverErrorObj?.message ?? 'Something went wrong';
+          errorMessage =
+            serverErrorObj?.error?.message ?? 'Please try again later.';
         }
 
         state.error = {
           ...serverErrorObj,
           error: {
+            ...serverErrorObj?.error,
             message: errorMessage,
           },
           message,
@@ -987,7 +1010,7 @@ export const AuthSlice = createSlice({
       .addCase(sendVerifyEmail.rejected, (state, action) => {
         state.loading = false;
         const serverErrorObj = action?.payload;
-        const errorMessages = handleFirebaseError(error);
+        const errorMessages = handleFirebaseError(serverErrorObj);
         if (errorMessages?.message) {
           state.error = {
             ...serverErrorObj,
