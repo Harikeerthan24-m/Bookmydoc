@@ -7,13 +7,15 @@ const AppEnv = APP_ENV || 'development';
 // Dynamically construct API URLs using LOCAL_IP from .env
 // This allows each team member to configure their own IP address
 export const APP_URL =
-  AppEnv === 'development' ? `http://localhost:3000` : `http://${LOCAL_IP}`;
+  AppEnv === 'development'
+    ? `http://localhost:${API_PORT}`
+    : `http://${LOCAL_IP}:${API_PORT}`;
 
 export const BASE_URL =
   AppEnv === 'production'
     ? `http://${LOCAL_IP}:${API_PORT}/api`
     : Platform.OS === 'ios'
-      ? 'http://localhost:8080/api' // iOS Simulator can use localhost
+      ? `http://localhost:${API_PORT}/api` // iOS Simulator can use localhost
       : `http://${LOCAL_IP}:${API_PORT}/api`; // Android emulator needs network IP
 
 const DEFAULT_TIMEOUT = 30_000;

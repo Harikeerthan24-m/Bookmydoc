@@ -8,29 +8,83 @@ import {
   KeyboardAvoidingView,
   Platform,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useChatMutation } from '../store/slices/ai.slice';
 
 const WELCOME_TEXT = 'Your AI Health care Assistant';
 
 const ChatScreen = () => {
   const [messageText, setMessageText] = useState('');
   const [messages, setMessages] = useState([]);
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const flatListRef = useRef(null);
+  const [chatMutation] = useChatMutation();
   const showWelcome = messages.length === 0;
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     const trimmed = messageText.trim();
-    if (!trimmed) return;
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text: trimmed, isUser: true },
-    ]);
+    if (!trimmed || isLoading) return;
+
+    // Add user message to UI
+    const userMessage = {
+      id: Date.now().toString(),
+      text: trimmed,
+      isUser: true,
+    };
+    setMessages((prev) => [...prev, userMessage]);
     setMessageText('');
+    setIsLoading(true);
+    
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
     }, 100);
-  }, [messageText]);
+
+    // Update conversation history for API
+    const updatedHistory = [
+      ...conversationHistory,
+      { role: 'user', content: trimmed },
+    ];
+
+    try {
+      const response = await chatMutation({
+        message: trimmed,
+        conversationHistory: conversationHistory.length > 0 ? conversationHistory : undefined,
+      }).unwrap();
+
+      // Add assistant response to UI
+      const assistantMessage = {
+        id: (Date.now() + 1).toString(),
+        text: response.response,
+        isUser: false,
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // Update conversation history
+      setConversationHistory(response.conversationHistory || updatedHistory);
+      
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      console.error('[Chat] Error:', error);
+      // Add error message
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        text: 'I apologize, but I encountered an error. Please try again or check your connection.',
+        isUser: false,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [messageText, isLoading, conversationHistory, chatMutation]);
 
   const renderMessage = useCallback(({ item }) => {
     const isUser = item.isUser;
@@ -60,7 +114,22 @@ const ChatScreen = () => {
     );
   }, []);
 
-  const canSend = messageText.trim().length > 0;
+  const renderThinkingIndicator = useCallback(() => {
+    if (!isLoading) return null;
+    
+    return (
+      <View style={[styles.bubbleRow, styles.bubbleRowAssistant]}>
+        <View style={[styles.bubble, styles.bubbleAssistant, styles.thinkingBubble]}>
+          <View style={styles.thinkingContainer}>
+            <ActivityIndicator size="small" color="#666" />
+            <Text style={styles.thinkingText}>AI is thinking...</Text>
+          </View>
+        </View>
+      </View>
+    );
+  }, [isLoading]);
+
+  const canSend = messageText.trim().length > 0 && !isLoading;
 
   return (
     <KeyboardAvoidingView
@@ -85,6 +154,7 @@ const ChatScreen = () => {
             onContentSizeChange={() => {
               flatListRef.current?.scrollToEnd({ animated: false });
             }}
+            ListFooterComponent={renderThinkingIndicator}
           />
         )}
       </View>
@@ -99,6 +169,7 @@ const ChatScreen = () => {
             onChangeText={setMessageText}
             onSubmitEditing={handleSend}
             blurOnSubmit={false}
+            editable={!isLoading}
           />
           <TouchableOpacity
             style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
@@ -179,6 +250,19 @@ const styles = StyleSheet.create({
   },
   bubbleTextAssistant: {
     color: '#333',
+  },
+  thinkingBubble: {
+    minWidth: 120,
+  },
+  thinkingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  thinkingText: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
   },
   inputBar: {
     paddingHorizontal: 16,

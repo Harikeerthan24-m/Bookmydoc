@@ -5,6 +5,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -20,6 +21,7 @@ import { Roles } from '@app/auth/decorators/roles.decorator';
 import { IRole } from '@app/common/types/type';
 import { AiService, IClassificationResult } from './ai.service';
 import { ClassifySymptomsDto } from './dto/classify-symptoms.dto';
+import { ChatRequestDto, ChatResponseDto } from './dto/chat.dto';
 
 @Controller('ai')
 @ApiBearerAuth()
@@ -71,6 +73,35 @@ export class AiController {
       statusCode: 200,
       data: result,
       message: 'Transcription successful',
+    };
+  }
+
+  @Post('chat')
+  @Roles(IRole.CUSTOMER, IRole.ADMIN)
+  @ApiOperation({
+    summary: 'Chat with AI healthcare assistant and get doctor recommendations',
+    description: 'Engage in a conversation about health concerns. The AI will ask questions, extract patient information, and recommend suitable doctors.',
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Chat response with doctor recommendations',
+    type: ChatResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  async chat(
+    @Body() dto: ChatRequestDto,
+    @Req() req: any,
+  ): Promise<{
+    statusCode: number;
+    data: ChatResponseDto;
+    message: string;
+  }> {
+    const userId = req?.user?.uid || req?.user?.userId;
+    const result = await this.aiService.chat(dto, userId);
+    return {
+      statusCode: 200,
+      data: result,
+      message: 'Chat response generated successfully',
     };
   }
 }

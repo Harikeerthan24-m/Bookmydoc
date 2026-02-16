@@ -60,9 +60,32 @@ export const AISlice = createApi({
           return response;
         },
       }),
+
+      chat: build.mutation({
+        query: (data) => ({
+          url: `/ai/chat`,
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          data,
+        }),
+        transformResponse: async (response) => {
+          return response?.data;
+        },
+        transformErrorResponse: (response) => {
+          const error = response?.error;
+          // Don't show toast for chat errors, handle in component
+          return response;
+        },
+      }),
     };
   },
 });
 
-export const { useClassifySymptomsMutation, useTranscribeAudioMutation } =
-  AISlice;
+export const { 
+  useClassifySymptomsMutation, 
+  useTranscribeAudioMutation,
+  useChatMutation,
+} = AISlice;
