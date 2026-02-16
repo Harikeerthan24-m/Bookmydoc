@@ -139,7 +139,9 @@ const SignupScreen = ({ navigation }) => {
       }));
     } catch (err) {
       const message = err?.message ?? 'Signup failed';
-      const detail = err?.error?.message ?? (typeof err?.error === 'string' ? err.error : '');
+      const detail =
+        err?.error?.message ??
+        (typeof err?.error === 'string' ? err.error : '');
       if (__DEV__) {
         console.warn('[Signup] Failed:', message, err?.statusCode, detail);
       }

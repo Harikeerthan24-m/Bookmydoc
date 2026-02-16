@@ -84,8 +84,8 @@ export const AISlice = createApi({
   },
 });
 
-export const { 
-  useClassifySymptomsMutation, 
+export const {
+  useClassifySymptomsMutation,
   useTranscribeAudioMutation,
   useChatMutation,
 } = AISlice;

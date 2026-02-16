@@ -85,7 +85,8 @@ const MyProfile = ({ navigation }) => {
 
   useEffect(() => {
     if (!loading && error) {
-      const title = typeof error?.message === 'string' ? error.message : 'Error';
+      const title =
+        typeof error?.message === 'string' ? error.message : 'Error';
       const detail = error?.error?.message;
       const textBody = Array.isArray(detail)
         ? detail.join(', ')

@@ -80,10 +80,11 @@ export class AiController {
   @Roles(IRole.CUSTOMER, IRole.ADMIN)
   @ApiOperation({
     summary: 'Chat with AI healthcare assistant and get doctor recommendations',
-    description: 'Engage in a conversation about health concerns. The AI will ask questions, extract patient information, and recommend suitable doctors.',
+    description:
+      'Engage in a conversation about health concerns. The AI will ask questions, extract patient information, and recommend suitable doctors.',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Chat response with doctor recommendations',
     type: ChatResponseDto,
   })

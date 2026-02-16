@@ -37,7 +37,7 @@ const ChatScreen = () => {
     setMessages((prev) => [...prev, userMessage]);
     setMessageText('');
     setIsLoading(true);
-    
+
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
     }, 100);
@@ -51,7 +51,8 @@ const ChatScreen = () => {
     try {
       const response = await chatMutation({
         message: trimmed,
-        conversationHistory: conversationHistory.length > 0 ? conversationHistory : undefined,
+        conversationHistory:
+          conversationHistory.length > 0 ? conversationHistory : undefined,
       }).unwrap();
 
       // Add assistant response to UI
@@ -64,7 +65,7 @@ const ChatScreen = () => {
 
       // Update conversation history
       setConversationHistory(response.conversationHistory || updatedHistory);
-      
+
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -77,7 +78,7 @@ const ChatScreen = () => {
         isUser: false,
       };
       setMessages((prev) => [...prev, errorMessage]);
-      
+
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -116,10 +117,12 @@ const ChatScreen = () => {
 
   const renderThinkingIndicator = useCallback(() => {
     if (!isLoading) return null;
-    
+
     return (
       <View style={[styles.bubbleRow, styles.bubbleRowAssistant]}>
-        <View style={[styles.bubble, styles.bubbleAssistant, styles.thinkingBubble]}>
+        <View
+          style={[styles.bubble, styles.bubbleAssistant, styles.thinkingBubble]}
+        >
           <View style={styles.thinkingContainer}>
             <ActivityIndicator size="small" color="#666" />
             <Text style={styles.thinkingText}>AI is thinking...</Text>

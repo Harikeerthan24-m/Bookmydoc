@@ -3,7 +3,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class ChatMessageDto {
-  @ApiProperty({ description: 'Role of the message sender', enum: ['user', 'assistant'] })
+  @ApiProperty({
+    description: 'Role of the message sender',
+    enum: ['user', 'assistant'],
+  })
   @IsString()
   role: 'user' | 'assistant';
 
@@ -13,13 +16,16 @@ export class ChatMessageDto {
 }
 
 export class ChatRequestDto {
-  @ApiProperty({ description: 'User message', example: 'I have a severe headache' })
+  @ApiProperty({
+    description: 'User message',
+    example: 'I have a severe headache',
+  })
   @IsString()
   message: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'Conversation history for context',
-    type: [ChatMessageDto]
+    type: [ChatMessageDto],
   })
   @IsOptional()
   @IsArray()
@@ -27,7 +33,9 @@ export class ChatRequestDto {
   @Type(() => ChatMessageDto)
   conversationHistory?: ChatMessageDto[];
 
-  @ApiPropertyOptional({ description: 'Patient preferences (gender, location, etc.)' })
+  @ApiPropertyOptional({
+    description: 'Patient preferences (gender, location, etc.)',
+  })
   @IsOptional()
   preferences?: {
     gender?: string;
@@ -60,9 +68,9 @@ export class ChatResponseDto {
   @ApiProperty({ description: 'AI assistant response' })
   response: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'Extracted patient information',
-    type: 'object'
+    type: 'object',
   })
   extractedInfo?: {
     symptoms?: string[];
@@ -71,9 +79,9 @@ export class ChatResponseDto {
     summary?: string;
   };
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'Recommended doctors',
-    type: [DoctorRecommendationDto]
+    type: [DoctorRecommendationDto],
   })
   doctorRecommendations?: DoctorRecommendationDto[];
 

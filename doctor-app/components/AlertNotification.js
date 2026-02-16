@@ -11,9 +11,15 @@ function toAlertString(value, fallback) {
   if (value == null) return fallback ?? '';
   if (typeof value === 'string') return value;
   if (typeof value === 'object' && value !== null) {
-    if (Array.isArray(value)) return value.map((v) => (typeof v === 'string' ? v : String(v))).join(', ');
+    if (Array.isArray(value))
+      return value
+        .map((v) => (typeof v === 'string' ? v : String(v)))
+        .join(', ');
     if (typeof value.message === 'string') return value.message;
-    if (Array.isArray(value.message)) return value.message.map((v) => (typeof v === 'string' ? v : String(v))).join(', ');
+    if (Array.isArray(value.message))
+      return value.message
+        .map((v) => (typeof v === 'string' ? v : String(v)))
+        .join(', ');
     return def;
   }
   return String(value);
@@ -43,8 +49,12 @@ export function AlertNotification({
         data: {
           titleType,
           textBodyType,
-          titleKeys: title && typeof title === 'object' ? Object.keys(title) : null,
-          textBodyKeys: textBody && typeof textBody === 'object' ? Object.keys(textBody) : null,
+          titleKeys:
+            title && typeof title === 'object' ? Object.keys(title) : null,
+          textBodyKeys:
+            textBody && typeof textBody === 'object'
+              ? Object.keys(textBody)
+              : null,
         },
         timestamp: Date.now(),
         hypothesisId: 'A',

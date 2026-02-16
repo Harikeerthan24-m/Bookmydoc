@@ -1,7 +1,12 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClassifySymptomsDto } from './dto/classify-symptoms.dto';
-import { ChatRequestDto, ChatResponseDto, ChatMessageDto, DoctorRecommendationDto } from './dto/chat.dto';
+import {
+  ChatRequestDto,
+  ChatResponseDto,
+  ChatMessageDto,
+  DoctorRecommendationDto,
+} from './dto/chat.dto';
 import { DoctorService } from '../doctor/doctor.service';
 import FormData = require('form-data');
 
@@ -358,9 +363,10 @@ Please analyze and recommend appropriate specialists.`;
    * Chat endpoint that handles conversational AI with patient information extraction
    * and doctor recommendations
    */
-  async chat(dto: ChatRequestDto, userId: string): Promise<ChatResponseDto> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async chat(dto: ChatRequestDto, _userId: string): Promise<ChatResponseDto> {
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
-    
+
     // Build conversation history
     const conversationHistory: ChatMessageDto[] = dto.conversationHistory || [];
     conversationHistory.push({ role: 'user', content: dto.message });
@@ -382,32 +388,53 @@ Please analyze and recommend appropriate specialists.`;
         aiResponse = result.response;
         extractedInfo = result.extractedInfo || {};
       } catch (error) {
-        console.warn('[AI] OpenAI chat failed, using fallback:', (error as Error)?.message);
-        aiResponse = this.getFallbackChatResponse(dto.message, conversationHistory);
+        console.warn(
+          '[AI] OpenAI chat failed, using fallback:',
+          (error as Error)?.message,
+        );
+        aiResponse = this.getFallbackChatResponse(
+          dto.message,
+          conversationHistory,
+        );
       }
     } else {
-      aiResponse = this.getFallbackChatResponse(dto.message, conversationHistory);
+      aiResponse = this.getFallbackChatResponse(
+        dto.message,
+        conversationHistory,
+      );
     }
 
     // If we have enough information, search for doctors
-    if (shouldSearchDoctors && (!extractedInfo.specialists || extractedInfo.specialists.length === 0)) {
+    if (
+      shouldSearchDoctors &&
+      (!extractedInfo.specialists || extractedInfo.specialists.length === 0)
+    ) {
       // Extract specialists from conversation if not already extracted
-      const classification = await this.classifySymptoms({ description: dto.message });
-      extractedInfo.specialists = classification.specialists.map(s => s.name);
+      const classification = await this.classifySymptoms({
+        description: dto.message,
+      });
+      extractedInfo.specialists = classification.specialists.map((s) => s.name);
       extractedInfo.urgency = classification.urgency;
       extractedInfo.summary = classification.summary;
     }
 
     if (shouldSearchDoctors && extractedInfo.specialists?.length > 0) {
       try {
-        const doctors = await this.searchDoctors(extractedInfo, dto.preferences);
-        doctorRecommendations = this.formatDoctorRecommendations(doctors, extractedInfo);
-        
+        const doctors = await this.searchDoctors(
+          extractedInfo,
+          dto.preferences,
+        );
+        doctorRecommendations = this.formatDoctorRecommendations(
+          doctors,
+          extractedInfo,
+        );
+
         // Enhance AI response with doctor recommendations
         if (doctorRecommendations.length > 0) {
           aiResponse += `\n\nI found ${doctorRecommendations.length} doctor${doctorRecommendations.length > 1 ? 's' : ''} that match your needs. Here are my recommendations:`;
         } else {
-          aiResponse += '\n\nI couldn\'t find doctors matching your specific criteria, but I can help you search with different filters.';
+          aiResponse +=
+            "\n\nI couldn't find doctors matching your specific criteria, but I can help you search with different filters.";
         }
       } catch (error) {
         console.error('[AI] Doctor search failed:', (error as Error)?.message);
@@ -431,19 +458,35 @@ Please analyze and recommend appropriate specialists.`;
    */
   private shouldSearchDoctors(conversationHistory: ChatMessageDto[]): boolean {
     if (conversationHistory.length < 2) return false; // Need at least user message + assistant response
-    
+
     // Check if user has mentioned symptoms or health concerns
     const userMessages = conversationHistory
-      .filter(m => m.role === 'user')
-      .map(m => m.content.toLowerCase());
-    
-    const hasSymptoms = userMessages.some(msg => {
+      .filter((m) => m.role === 'user')
+      .map((m) => m.content.toLowerCase());
+
+    const hasSymptoms = userMessages.some((msg) => {
       const symptomKeywords = [
-        'pain', 'ache', 'hurt', 'symptom', 'problem', 'issue', 'concern',
-        'feeling', 'unwell', 'sick', 'ill', 'headache', 'fever', 'cough',
-        'nausea', 'dizziness', 'rash', 'bleeding', 'infection'
+        'pain',
+        'ache',
+        'hurt',
+        'symptom',
+        'problem',
+        'issue',
+        'concern',
+        'feeling',
+        'unwell',
+        'sick',
+        'ill',
+        'headache',
+        'fever',
+        'cough',
+        'nausea',
+        'dizziness',
+        'rash',
+        'bleeding',
+        'infection',
       ];
-      return symptomKeywords.some(keyword => msg.includes(keyword));
+      return symptomKeywords.some((keyword) => msg.includes(keyword));
     });
 
     return hasSymptoms;
@@ -471,11 +514,14 @@ Keep responses concise (2-3 sentences max) and conversational. Don't provide med
     // Convert conversation history to OpenAI format
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(0, -1).map(msg => ({
+      ...conversationHistory.slice(0, -1).map((msg) => ({
         role: msg.role,
         content: msg.content,
       })),
-      { role: 'user', content: conversationHistory[conversationHistory.length - 1].content },
+      {
+        role: 'user',
+        content: conversationHistory[conversationHistory.length - 1].content,
+      },
     ];
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -520,26 +566,36 @@ Keep responses concise (2-3 sentences max) and conversational. Don't provide med
    */
   private extractPatientInfo(conversationHistory: ChatMessageDto[]): any {
     const allText = conversationHistory
-      .filter(m => m.role === 'user')
-      .map(m => m.content.toLowerCase())
+      .filter((m) => m.role === 'user')
+      .map((m) => m.content.toLowerCase())
       .join(' ');
 
     const info: any = {};
 
     // Extract urgency indicators
-    const emergencyKeywords = ['emergency', 'severe', 'critical', 'urgent', 'immediate', 'chest pain', 'can\'t breathe'];
+    const emergencyKeywords = [
+      'emergency',
+      'severe',
+      'critical',
+      'urgent',
+      'immediate',
+      'chest pain',
+      "can't breathe",
+    ];
     const urgentKeywords = ['urgent', 'soon', 'asap', 'quickly'];
-    
-    if (emergencyKeywords.some(k => allText.includes(k))) {
+
+    if (emergencyKeywords.some((k) => allText.includes(k))) {
       info.urgency = 'emergency';
-    } else if (urgentKeywords.some(k => allText.includes(k))) {
+    } else if (urgentKeywords.some((k) => allText.includes(k))) {
       info.urgency = 'urgent';
     } else {
       info.urgency = 'routine';
     }
 
     // Extract location preferences
-    const locationMatch = allText.match(/(?:in|near|at|location|city|area)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+    const locationMatch = allText.match(
+      /(?:in|near|at|location|city|area)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/,
+    );
     if (locationMatch) {
       info.location = locationMatch[1];
     }
@@ -547,7 +603,10 @@ Keep responses concise (2-3 sentences max) and conversational. Don't provide med
     // Extract gender preferences
     if (allText.includes('male doctor') || allText.includes('male physician')) {
       info.gender = 'male';
-    } else if (allText.includes('female doctor') || allText.includes('female physician')) {
+    } else if (
+      allText.includes('female doctor') ||
+      allText.includes('female physician')
+    ) {
       info.gender = 'female';
     }
 
@@ -557,7 +616,10 @@ Keep responses concise (2-3 sentences max) and conversational. Don't provide med
   /**
    * Search doctors based on extracted information
    */
-  private async searchDoctors(extractedInfo: any, preferences?: any): Promise<any[]> {
+  private async searchDoctors(
+    extractedInfo: any,
+    preferences?: any,
+  ): Promise<any[]> {
     const filters: any = {
       limit: 5,
     };
@@ -598,8 +660,11 @@ Keep responses concise (2-3 sentences max) and conversational. Don't provide med
   ): DoctorRecommendationDto[] {
     return doctors.map((doctor) => {
       const specialization = doctor.expertiseList?.[0] || 'General Physician';
-      const location = doctor.location?.city || doctor.location?.address || 'Location not specified';
-      
+      const location =
+        doctor.location?.city ||
+        doctor.location?.address ||
+        'Location not specified';
+
       return {
         doctorId: doctor.uid || doctor.id,
         name: doctor.display_name || doctor.user_name || 'Dr. Unknown',
@@ -619,19 +684,31 @@ Keep responses concise (2-3 sentences max) and conversational. Don't provide med
     conversationHistory: ChatMessageDto[],
   ): string {
     const lowerMessage = message.toLowerCase();
-    
+
     // Greeting responses
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-      return 'Hello! I\'m here to help you with your health concerns. How are you feeling today?';
+    if (
+      lowerMessage.includes('hello') ||
+      lowerMessage.includes('hi') ||
+      lowerMessage.includes('hey')
+    ) {
+      return "Hello! I'm here to help you with your health concerns. How are you feeling today?";
     }
 
     // Symptom acknowledgment
-    if (lowerMessage.includes('pain') || lowerMessage.includes('ache') || lowerMessage.includes('hurt')) {
-      return 'I understand you\'re experiencing some discomfort. Can you tell me more about where the pain is located and how long you\'ve been experiencing it?';
+    if (
+      lowerMessage.includes('pain') ||
+      lowerMessage.includes('ache') ||
+      lowerMessage.includes('hurt')
+    ) {
+      return "I understand you're experiencing some discomfort. Can you tell me more about where the pain is located and how long you've been experiencing it?";
     }
 
     // Doctor search request
-    if (lowerMessage.includes('doctor') || lowerMessage.includes('find') || lowerMessage.includes('search')) {
+    if (
+      lowerMessage.includes('doctor') ||
+      lowerMessage.includes('find') ||
+      lowerMessage.includes('search')
+    ) {
       return 'I can help you find a suitable doctor. Can you describe your symptoms or health concern?';
     }
 
@@ -640,6 +717,6 @@ Keep responses concise (2-3 sentences max) and conversational. Don't provide med
       return 'Thank you for sharing. Can you tell me more about your symptoms or health concern? This will help me find the right doctor for you.';
     }
 
-    return 'I understand. Based on what you\'ve told me, I can help you find a doctor. Would you like me to search for doctors now?';
+    return "I understand. Based on what you've told me, I can help you find a doctor. Would you like me to search for doctors now?";
   }
 }
