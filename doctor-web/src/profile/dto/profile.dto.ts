@@ -12,10 +12,10 @@ import { AddressDto } from './address.dto';
 import { Transform, Type } from 'class-transformer';
 
 export class ProfileDto {
-  // @IsOptional()
-  // @IsString()
-  // @ApiPropertyOptional({ description: 'Display name of the profile' })
-  // display_name?: string;
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Display name of the profile' })
+  display_name?: string;
 
   @IsOptional()
   @IsString()
