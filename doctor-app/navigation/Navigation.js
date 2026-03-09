@@ -17,6 +17,7 @@ import ChatScreen from '../screens/ChatScreen';
 import Payment from '../screens/PaymentScreen';
 // import DoctorAppointment from '../components/explore_components/doctorprofile_components/doctorappointmentbottom/DoctorApppointment';
 import MyProfile from '../screens/MyProfile';
+import VoiceScreen from '../screens/VoiceScreen';
 
 import Stethoscope_Selected from '../assets/icons/Stethoscope_Selected';
 import Stethoscope_Icon from '../assets/icons/Stethoscope_Icon';
@@ -187,6 +188,7 @@ const Navigation = () => {
         {/* <Stack.Screen name="DoctorAppointment" component={DoctorAppointment} /> */}
         <Stack.Screen name="Payment" component={Payment} />
         <Stack.Screen name="MyProfile" component={MyProfile} />
+        <Stack.Screen name="Voice" component={VoiceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
