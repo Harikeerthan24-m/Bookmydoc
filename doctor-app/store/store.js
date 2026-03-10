@@ -11,6 +11,7 @@ import {
   ServiceSlice,
   DoctorsSlice,
   AISlice,
+  VoiceAssistantSlice,
 } from './slices';
 
 const rootPersistConfig = {
@@ -23,6 +24,7 @@ const rootPersistConfig = {
     ServiceSlice.reducerPath,
     DoctorsSlice.reducerPath,
     AISlice.reducerPath,
+    VoiceAssistantSlice.reducerPath,
   ],
   whiteList: [NotificationsSlice.name],
 };
@@ -49,6 +51,7 @@ const rootReducer = combineReducers({
   [ServiceSlice.reducerPath]: ServiceSlice.reducer,
   [DoctorsSlice.reducerPath]: DoctorsSlice.reducer,
   [AISlice.reducerPath]: AISlice.reducer,
+  [VoiceAssistantSlice.reducerPath]: VoiceAssistantSlice.reducer,
 });
 
 const persistedReducer = persistReducer(rootPersistConfig, rootReducer);
@@ -62,6 +65,7 @@ export const store = configureStore({
       ServiceSlice.middleware,
       DoctorsSlice.middleware,
       AISlice.middleware,
+      VoiceAssistantSlice.middleware,
     ]),
   devTools: APP_ENV === 'development',
 });

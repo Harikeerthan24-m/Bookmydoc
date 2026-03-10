@@ -6,3 +6,4 @@ export * from './bookings.slice.js';
 export * from './service.slice.js';
 export * from './doctors.slice.js';
 export * from './ai.slice.js';
+export * from './voice.slice.js';

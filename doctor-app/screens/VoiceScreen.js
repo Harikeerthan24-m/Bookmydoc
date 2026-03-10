@@ -9,6 +9,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+import { useGetRealtimeTokenMutation } from '../store/slices/voice.slice';
 
 const VOICE_STATES = {
   IDLE: 'IDLE',
@@ -25,7 +26,11 @@ const VoiceScreen = () => {
 
   // Orb state
   const [voiceState, setVoiceState] = useState(VOICE_STATES.IDLE);
-
+  // Voice Assistant
+  const [
+    getRealtimeToken,
+    { data: realtimeToken, isLoading: isGettingRealtimeToken },
+  ] = useGetRealtimeTokenMutation();
   // Animated values
   const scale = useRef(new Animated.Value(1)).current;
   const rotate = useRef(new Animated.Value(0)).current;
@@ -142,13 +147,19 @@ const VoiceScreen = () => {
   const micIconColor = isMicListening ? '#000000' : '#ff3b30';
 
   // TEMP: cycle through states when you tap mic (for testing)
-  const handleMicPress = () => {
-    setVoiceState((prev) => {
-      if (prev === VOICE_STATES.IDLE) return VOICE_STATES.LISTENING;
-      if (prev === VOICE_STATES.LISTENING) return VOICE_STATES.PROCESSING;
-      if (prev === VOICE_STATES.PROCESSING) return VOICE_STATES.SPEAKING;
-      return VOICE_STATES.IDLE;
-    });
+  const handleMicPress = async () => {
+    try {
+      const res = await getRealtimeToken().unwrap(); // res = { token, session }
+      console.log('Realtime token:', res.token);
+    } catch (e) {
+      console.log('Realtime token error:', e);
+    }
+    // setVoiceState((prev) => {
+    //   if (prev === VOICE_STATES.IDLE) return VOICE_STATES.LISTENING;
+    //   if (prev === VOICE_STATES.LISTENING) return VOICE_STATES.PROCESSING;
+    //   if (prev === VOICE_STATES.PROCESSING) return VOICE_STATES.SPEAKING;
+    //   return VOICE_STATES.IDLE;
+    // });
   };
 
   return (
