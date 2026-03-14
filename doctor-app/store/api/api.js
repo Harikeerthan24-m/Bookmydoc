@@ -1,22 +1,14 @@
-import { Platform } from 'react-native';
+// import { Platform } from 'react-native';
 import axios from 'axios';
 import { APP_ENV, LOCAL_IP, API_PORT } from '@env';
 
 const AppEnv = APP_ENV || 'development';
 
 // Dynamically construct API URLs using LOCAL_IP from .env
-// This allows each team member to configure their own IP address
-export const APP_URL =
-  AppEnv === 'development'
-    ? `http://localhost:${API_PORT}`
-    : `http://${LOCAL_IP}:${API_PORT}`;
+// Changing LOCAL_IP (and API_PORT) in .env updates these automatically
+export const APP_URL = `http://${LOCAL_IP}:${API_PORT}`;
 
-export const BASE_URL =
-  AppEnv === 'production'
-    ? `http://${LOCAL_IP}:${API_PORT}/api`
-    : Platform.OS === 'ios'
-      ? `http://localhost:${API_PORT}/api` // iOS Simulator can use localhost
-      : `http://${LOCAL_IP}:${API_PORT}/api`; // Android emulator needs network IP
+export const BASE_URL = `${APP_URL}/api`;
 
 const DEFAULT_TIMEOUT = 30_000;
 
@@ -124,6 +116,14 @@ export function normalizeApiError(error) {
     data: null,
   };
 }
+
+console.log('[API CONFIG]', {
+  APP_ENV,
+  LOCAL_IP,
+  API_PORT,
+  APP_URL,
+  BASE_URL,
+});
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

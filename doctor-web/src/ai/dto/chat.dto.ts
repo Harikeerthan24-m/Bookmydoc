@@ -42,6 +42,28 @@ export class ChatRequestDto {
     location?: string;
     minRating?: number;
   };
+
+  @ApiPropertyOptional({
+    description:
+      'True when the previous assistant response showed doctor recommendations (follow-up turn). Ensures conversationStage is post_recommendation.',
+  })
+  @IsOptional()
+  previousTurnHadDoctorRecommendations?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      "Patient's display name. AI will use it naturally in replies (e.g. first greeting, acknowledgments) for a human touch.",
+  })
+  @IsOptional()
+  userName?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'How the user sent this message: "text" (typed in chat) or "voice" (spoken, then transcribed). Used for session storage and UI (e.g. show mic icon); AI always receives plain text.',
+    enum: ['text', 'voice'],
+  })
+  @IsOptional()
+  inputType?: 'text' | 'voice';
 }
 
 export class DoctorRecommendationDto {
@@ -77,6 +99,14 @@ export class ChatResponseDto {
     urgency?: 'emergency' | 'urgent' | 'routine';
     specialists?: string[];
     summary?: string;
+    conversationStage?: 'gathering' | 'recommending' | 'post_recommendation';
+    inputType?:
+      | 'valid'
+      | 'out_of_context'
+      | 'gibberish'
+      | 'emotional'
+      | 'jailbreak'
+      | 'filler';
   };
 
   @ApiPropertyOptional({
