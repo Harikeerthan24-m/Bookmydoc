@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect } from 'react';
 import messaging from '@react-native-firebase/messaging';
 import { useSelector, useDispatch } from 'react-redux';
 import Navigation from './navigation/Navigation';
@@ -12,9 +12,7 @@ import {
   addNotifications,
   resetNotifications,
 } from './store/slices';
-import {
-  AppDispatch
-} from './store';
+import { AppDispatch } from './store';
 import SplashScreen from './screens/SplashScreen';
 import { navigate } from './navigation/navigation-ref';
 
@@ -83,19 +81,17 @@ export default function Layout() {
 
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        if (isAccessTokenExpired) {
-          const refreshUser = await user.getIdTokenResult(true);
-          if (refreshUser?.token) {
-            await dispatch(
-              refreshAuth({
-                accessToken: refreshUser?.token,
-                expirationTime: refreshUser?.expirationTime,
-                stsTokenManager: user?.stsTokenManager,
-              }),
-            );
-          } else {
-            dispatch(logout());
-          }
+        const refreshUser = await user.getIdTokenResult(true);
+        if (refreshUser?.token) {
+          await dispatch(
+            refreshAuth({
+              accessToken: refreshUser?.token,
+              expirationTime: refreshUser?.expirationTime,
+              stsTokenManager: user?.stsTokenManager,
+            }),
+          );
+        } else {
+          dispatch(logout());
         }
       } else {
         dispatch(logout());
