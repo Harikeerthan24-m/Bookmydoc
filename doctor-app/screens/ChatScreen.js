@@ -1,4 +1,10 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
 import {
   View,
   Text,
@@ -10,16 +16,14 @@ import {
   FlatList,
   ActivityIndicator,
   Image,
-  Animated,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
 import {
   useChatMutation,
-  useTranscribeAudioMutation,
-  useTtsMutation,
+  useGetChatHistoryQuery,
+  useLazyGetChatHistoryQuery,
 } from '../store/slices/ai.slice';
 import Global_Styles from '../utils/Global_Styles';
 import ProfileImage from '../assets/images/doc1.png';
@@ -27,33 +31,180 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const WELCOME_TEXT = 'Your AI Health care Assistant';
 
+const PAGE_SIZE = 25;
+
+function getDateLabel(isoString) {
+  if (!isoString) return null;
+  const date = new Date(isoString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const d = date.getDate();
+  const m = date.getMonth();
+  const y = date.getFullYear();
+  const tD = today.getDate();
+  const tM = today.getMonth();
+  const tY = today.getFullYear();
+  const yD = yesterday.getDate();
+  const yM = yesterday.getMonth();
+  const yY = yesterday.getFullYear();
+  if (y === tY && m === tM && d === tD) return 'Today';
+  if (y === yY && m === yM && d === yD) return 'Yesterday';
+  const day = String(d).padStart(2, '0');
+  const month = String(m + 1).padStart(2, '0');
+  return `${day}/${month}/${y}`;
+}
+
+function buildListWithDateSections(messages) {
+  const list = [];
+  let lastDateKey = null;
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    const iso = msg.createdAt;
+    const date = iso ? new Date(iso) : new Date();
+    const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    if (dateKey !== lastDateKey) {
+      lastDateKey = dateKey;
+      const label = getDateLabel(iso || date.toISOString());
+      if (label) {
+        list.push({ type: 'date', id: `date-${dateKey}`, label });
+      }
+    }
+    list.push({ ...msg, type: 'message' });
+  }
+  return list;
+}
+
 const ChatScreen = () => {
   const navigation = useNavigation();
+  const user = useSelector((state) => state.authSlice?.user);
+  const profile = useSelector((state) => state.authSlice?.profile);
+  const userName =
+    profile?.display_name || user?.displayName || user?.display_name || '';
   const [messageText, setMessageText] = useState('');
   const [messages, setMessages] = useState([]);
   const [conversationHistory, setConversationHistory] = useState([]);
+  const [nextCursor, setNextCursor] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const flatListRef = useRef(null);
   const [chatMutation] = useChatMutation();
-  const [transcribeAudio, { isLoading: isTranscribing }] =
-    useTranscribeAudioMutation();
-  const [tts] = useTtsMutation();
+  const chatHistoryQueryArg = useMemo(() => ({ limit: PAGE_SIZE }), []);
+  const { data: chatHistoryData, isLoading: isLoadingHistory } =
+    useGetChatHistoryQuery(chatHistoryQueryArg, { skip: !user?.uid });
+  const [fetchOlderHistory] = useLazyGetChatHistoryQuery();
+  const lastSyncedHistoryRef = useRef(null);
+  const prevLoadingRef = useRef(true);
+
+  useEffect(() => {
+    const justFinishedLoading =
+      prevLoadingRef.current && !isLoadingHistory;
+    prevLoadingRef.current = isLoadingHistory;
+
+    if (isLoadingHistory) return;
+    if (!chatHistoryData) return;
+
+    const history = chatHistoryData.conversationHistory || [];
+    const msgs = chatHistoryData.messages || [];
+    const msgCount = msgs.length;
+    const cursor = chatHistoryData.nextCursor ?? null;
+    const firstId = msgs[0]?.id;
+    const syncKey = `${msgCount}-${cursor}-${firstId}`;
+    if (!justFinishedLoading && lastSyncedHistoryRef.current === syncKey) return;
+    lastSyncedHistoryRef.current = syncKey;
+
+    setConversationHistory(history);
+    const uiMessages = msgs.map((m) => ({
+      id: m.id || m.content?.slice(0, 8) || String(Math.random()),
+      text: m.content || '',
+      isUser: m.role === 'user',
+      doctors: m.doctors,
+      createdAt: m.createdAt,
+      inputType: m.inputType || 'text',
+      outputType: m.outputType || 'text',
+    }));
+    setMessages(uiMessages);
+    setNextCursor(cursor);
+    const t = setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: false });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [isLoadingHistory]);
+
+  const hasMore = nextCursor != null;
+
+  const loadOlderMessages = useCallback(async () => {
+    if (!nextCursor || loadingMore || !user?.uid) return;
+    setLoadingMore(true);
+    try {
+      const result = await fetchOlderHistory({
+        limit: 25,
+        before: nextCursor,
+      }).unwrap();
+      if (!result?.messages?.length) {
+        setNextCursor(null);
+        return;
+      }
+      const olderHistory = result.conversationHistory || [];
+      const olderUiMessages = (result.messages || []).map((m) => ({
+        id: m.id || m.content?.slice(0, 8) || String(Math.random()),
+        text: m.content || '',
+        isUser: m.role === 'user',
+        doctors: m.doctors,
+        createdAt: m.createdAt,
+        inputType: m.inputType || 'text',
+        outputType: m.outputType || 'text',
+      }));
+      setConversationHistory((prev) => [...olderHistory, ...prev]);
+      setMessages((prev) => [...olderUiMessages, ...prev]);
+      setNextCursor(result.nextCursor ?? null);
+    } catch (e) {
+      console.warn('[Chat] Load older history failed:', e);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [nextCursor, loadingMore, user?.uid, fetchOlderHistory]);
+
+  const handleScroll = useCallback(
+    (e) => {
+      const { contentOffset, contentSize, layoutMeasurement } =
+        e?.nativeEvent ?? {};
+      const y = contentOffset?.y ?? 0;
+      if (y < 80 && hasMore && !loadingMore) loadOlderMessages();
+      const distanceFromBottom =
+        (contentSize?.height ?? 0) - y - (layoutMeasurement?.height ?? 0);
+      setShowScrollToBottom(distanceFromBottom > 120);
+    },
+    [hasMore, loadingMore, loadOlderMessages],
+  );
+
+  const listWithDateSections = useMemo(
+    () => buildListWithDateSections(messages),
+    [messages],
+  );
+
+  const scrollToBottom = useCallback(() => {
+    setShowScrollToBottom(false);
+    flatListRef.current?.scrollToEnd({ animated: true });
+  }, []);
+
   const showWelcome = messages.length === 0;
-  const [isRecording, setIsRecording] = useState(false);
-  const [error, setError] = useState(null);
-  const recordingRef = useRef(null);
-  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const sendMessage = useCallback(
     async (text) => {
+      // 1. trim the user given text
       const trimmed = text.trim();
       if (!trimmed || isLoading) return;
 
-      // Add user message to UI
+      // 2. Add user message to UI
+      const nowIso = new Date().toISOString();
       const userMessage = {
         id: Date.now().toString(),
         text: trimmed,
         isUser: true,
+        createdAt: nowIso,
+        inputType: 'text',
       };
       setMessages((prev) => [...prev, userMessage]);
       setMessageText('');
@@ -69,11 +220,21 @@ const ChatScreen = () => {
         { role: 'user', content: trimmed },
       ];
 
+      const lastMessage = messages[messages.length - 1];
+      const previousTurnHadDoctors =
+        lastMessage &&
+        !lastMessage.isUser &&
+        (lastMessage.doctors?.length ?? 0) > 0;
+
       try {
         const response = await chatMutation({
           message: trimmed,
           conversationHistory:
             conversationHistory.length > 0 ? conversationHistory : undefined,
+          previousTurnHadDoctorRecommendations:
+            previousTurnHadDoctors || undefined,
+          userName: userName || undefined,
+          inputType: 'text',
         }).unwrap();
 
         // Add assistant response to UI
@@ -84,28 +245,9 @@ const ChatScreen = () => {
           doctors: Array.isArray(response?.doctorRecommendations)
             ? response.doctorRecommendations
             : [],
+          createdAt: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
-
-        // Voice output: ask backend to synthesize speech for the assistant reply
-        try {
-          const ttsResult = await tts({ text: response.response }).unwrap();
-          if (ttsResult?.audioBase64) {
-            const fileUri = `${FileSystem.cacheDirectory}assistant-${Date.now()}.mp3`;
-            await FileSystem.writeAsStringAsync(
-              fileUri,
-              ttsResult.audioBase64,
-              { encoding: FileSystem.EncodingType.Base64 },
-            );
-
-            await Audio.Sound.createAsync(
-              { uri: fileUri },
-              { shouldPlay: true },
-            );
-          }
-        } catch (ttsError) {
-          console.warn('[Chat] Failed to play assistant audio:', ttsError);
-        }
 
         // Update conversation history
         setConversationHistory(response.conversationHistory || updatedHistory);
@@ -130,7 +272,7 @@ const ChatScreen = () => {
         setIsLoading(false);
       }
     },
-    [chatMutation, conversationHistory, isLoading],
+    [chatMutation, conversationHistory, isLoading, messages, userName],
   );
 
   const handleSend = useCallback(() => {
@@ -194,7 +336,19 @@ const ChatScreen = () => {
 
   const renderMessage = useCallback(
     ({ item }) => {
+      if (item.type === 'date') {
+        return (
+          <View style={styles.dateSeparatorWrap}>
+            <View style={styles.dateSeparator}>
+              <Text style={styles.dateSeparatorText}>{item.label}</Text>
+            </View>
+          </View>
+        );
+      }
       const isUser = item.isUser;
+      const isVoiceInput = isUser && item.inputType === 'voice';
+      const isVoiceOutput = !isUser && item.outputType === 'voice';
+      const showVoiceIcon = isVoiceInput || isVoiceOutput;
       return (
         <View>
           <View
@@ -207,8 +361,17 @@ const ChatScreen = () => {
               style={[
                 styles.bubble,
                 isUser ? styles.bubbleUser : styles.bubbleAssistant,
+                showVoiceIcon && styles.bubbleContentRow,
               ]}
             >
+              {showVoiceIcon && (
+                <Ionicons
+                  name="mic"
+                  size={14}
+                  color={isUser ? 'rgba(255,255,255,0.9)' : '#666'}
+                  style={styles.bubbleVoiceIcon}
+                />
+              )}
               <Text
                 style={[
                   styles.bubbleText,
@@ -252,107 +415,18 @@ const ChatScreen = () => {
 
   const canSend = messageText.trim().length > 0 && !isLoading;
 
-  // --- Voice Recording ---
-  const startPulse = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.3,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-  };
-
-  const stopPulse = () => {
-    pulseAnim.stopAnimation();
-    pulseAnim.setValue(1);
-  };
-
-  const startRecording = async () => {
-    try {
-      const permission = await Audio.requestPermissionsAsync();
-      if (!permission.granted) {
-        setError('Microphone permission is required for voice input');
-        return;
-      }
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
-
-      recordingRef.current = recording;
-      setIsRecording(true);
-      startPulse();
-    } catch (err) {
-      console.error('Failed to start recording:', err);
-      setError('Failed to start recording');
-    }
-  };
-
-  const stopRecordingAndTranscribe = async () => {
-    try {
-      stopPulse();
-      setIsRecording(false);
-
-      if (!recordingRef.current) return;
-
-      await recordingRef.current.stopAndUnloadAsync();
-      const uri = recordingRef.current.getURI();
-      recordingRef.current = null;
-
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-
-      if (!uri) {
-        setError('No audio recorded');
-        return;
-      }
-
-      // Build FormData with the audio file
-      const formData = new FormData();
-      formData.append('audio', {
-        uri,
-        type: Platform.OS === 'ios' ? 'audio/m4a' : 'audio/m4a',
-        name: 'recording.m4a',
-      });
-
-      const response = await transcribeAudio(formData).unwrap();
-      const transcribedText = response?.text || response?.data?.text;
-
-      if (transcribedText) {
-        // Option A: auto-send as a chat message
-        await sendMessage(transcribedText);
-      } else {
-        setError('Could not understand the audio. Please try again.');
-      }
-    } catch (err) {
-      console.error('Transcription error:', err);
-      setError(
-        typeof err === 'string'
-          ? err
-          : err?.message || 'Voice transcription failed',
-      );
-    }
-  };
-
-  const handleMicPress = () => {
-    if (isRecording) {
-      stopRecordingAndTranscribe();
-    } else {
-      startRecording();
-    }
-  };
+  if (isLoadingHistory) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <ActivityIndicator size="large" color={Global_Styles.PrimaryColour} />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -370,17 +444,36 @@ const ChatScreen = () => {
         ) : (
           <FlatList
             ref={flatListRef}
-            data={messages}
+            data={listWithDateSections}
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
             contentContainerStyle={styles.listContent}
-            onContentSizeChange={() => {
-              flatListRef.current?.scrollToEnd({ animated: false });
-            }}
+            onScroll={handleScroll}
+            scrollEventThrottle={200}
+            ListHeaderComponent={
+              loadingMore ? (
+                <View style={styles.loadMoreWrap}>
+                  <ActivityIndicator
+                    size="small"
+                    color={Global_Styles.PrimaryColour}
+                  />
+                </View>
+              ) : null
+            }
             ListFooterComponent={renderThinkingIndicator}
           />
         )}
       </View>
+
+      {showScrollToBottom && !showWelcome && (
+        <TouchableOpacity
+          style={styles.scrollToBottomButton}
+          onPress={scrollToBottom}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="chevron-down" size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
 
       <View style={styles.inputBar}>
         <View style={styles.inputRow}>
@@ -394,28 +487,6 @@ const ChatScreen = () => {
             blurOnSubmit={false}
             editable={!isLoading}
           />
-          <TouchableOpacity
-            style={styles.micButton}
-            onPress={handleMicPress}
-            disabled={isTranscribing || isLoading}
-          >
-            {isTranscribing ? (
-              <ActivityIndicator
-                size="small"
-                color={Global_Styles.PrimaryColour}
-              />
-            ) : (
-              <Animated.View
-                style={{ transform: [{ scale: isRecording ? pulseAnim : 1 }] }}
-              >
-                <Ionicons
-                  name={isRecording ? 'stop-circle' : 'mic'}
-                  size={22}
-                  color={isRecording ? '#FF3B30' : '#000'}
-                />
-              </Animated.View>
-            )}
-          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
             onPress={handleSend}
@@ -472,6 +543,42 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingBottom: 24,
   },
+  loadMoreWrap: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateSeparatorWrap: {
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  dateSeparator: {
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  dateSeparatorText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  scrollToBottomButton: {
+    position: 'absolute',
+    bottom: 72,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(90, 90, 90, 0.85)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+  },
   bubbleRow: {
     marginBottom: 12,
     maxWidth: '80%',
@@ -486,6 +593,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  bubbleContentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bubbleVoiceIcon: {
+    marginRight: 8,
   },
   bubbleUser: {
     backgroundColor: '#009EFF',
@@ -567,14 +681,6 @@ const styles = StyleSheet.create({
   },
 
   // Doctor card styles (match Explore search card pattern)
-  micButton: {
-    marginRight: 6,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   docItem: {
     flexDirection: 'row',
     backgroundColor: '#fff',
