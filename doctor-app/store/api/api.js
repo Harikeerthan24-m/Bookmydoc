@@ -52,7 +52,10 @@ export function normalizeApiError(error) {
       return {
         statusCode: resolvedStatus,
         message: 'Something went wrong.',
-        error: { message: 'Please try again or log in again.', code: 'AUTH_ERROR' },
+        error: {
+          message: 'Please try again or log in again.',
+          code: 'AUTH_ERROR',
+        },
         data: null,
       };
     }

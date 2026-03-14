@@ -144,18 +144,28 @@ const Notifications = () => {
         ) : (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconWrap}>
-              <Ionicons name="notifications-off-outline" size={48} color={Global_Styles.Colors.textSecondary} />
+              <Ionicons
+                name="notifications-off-outline"
+                size={48}
+                color={Global_Styles.Colors.textSecondary}
+              />
             </View>
             <Text style={styles.emptyTitle}>You're all caught up!</Text>
             <Text style={styles.emptySubtitle}>
-              No notifications yet. Stay proactive about your health — book a consultation today.
+              No notifications yet. Stay proactive about your health — book a
+              consultation today.
             </Text>
             <TouchableOpacity
               style={styles.ctaButton}
               activeOpacity={0.85}
               onPress={() => navigation.navigate('Main', { screen: 'Explore' })}
             >
-              <Ionicons name="calendar-outline" size={18} color="#fff" style={styles.ctaIcon} />
+              <Ionicons
+                name="calendar-outline"
+                size={18}
+                color="#fff"
+                style={styles.ctaIcon}
+              />
               <Text style={styles.ctaText}>Book a Consultation</Text>
             </TouchableOpacity>
           </View>

@@ -49,7 +49,8 @@ const ExploreScreen = () => {
           <View style={Styles.ctaLeft}>
             <Text style={Styles.ctaTitle}>Not sure who to see?</Text>
             <Text style={Styles.ctaSubtitle}>
-              Describe your symptoms and let our AI match you with the right doctor.
+              Describe your symptoms and let our AI match you with the right
+              doctor.
             </Text>
           </View>
           <View style={Styles.ctaIconWrap}>

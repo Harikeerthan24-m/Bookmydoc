@@ -100,8 +100,7 @@ const ChatScreen = () => {
   const prevLoadingRef = useRef(true);
 
   useEffect(() => {
-    const justFinishedLoading =
-      prevLoadingRef.current && !isLoadingHistory;
+    const justFinishedLoading = prevLoadingRef.current && !isLoadingHistory;
     prevLoadingRef.current = isLoadingHistory;
 
     if (isLoadingHistory) return;
@@ -113,7 +112,8 @@ const ChatScreen = () => {
     const cursor = chatHistoryData.nextCursor ?? null;
     const firstId = msgs[0]?.id;
     const syncKey = `${msgCount}-${cursor}-${firstId}`;
-    if (!justFinishedLoading && lastSyncedHistoryRef.current === syncKey) return;
+    if (!justFinishedLoading && lastSyncedHistoryRef.current === syncKey)
+      return;
     lastSyncedHistoryRef.current = syncKey;
 
     setConversationHistory(history);
@@ -388,7 +388,10 @@ const ChatScreen = () => {
     );
   }, [isLoading]);
 
-  const canSend = messageText.trim().length > 0 && !isLoading && (Date.now() - lastSentAtRef.current >= RATE_LIMIT_MS);
+  const canSend =
+    messageText.trim().length > 0 &&
+    !isLoading &&
+    Date.now() - lastSentAtRef.current >= RATE_LIMIT_MS;
 
   if (isLoadingHistory) {
     return (
@@ -428,13 +431,18 @@ const ChatScreen = () => {
         {showWelcome ? (
           <View style={styles.welcomeContainer}>
             <View style={styles.welcomeIconWrap}>
-              <Ionicons name="sparkles" size={36} color={Global_Styles.Colors.primary} />
+              <Ionicons
+                name="sparkles"
+                size={36}
+                color={Global_Styles.Colors.primary}
+              />
             </View>
             <Text style={styles.welcomeGreeting}>
               Hey{userName ? `, ${userName.split(' ')[0]}` : ''}! 👋
             </Text>
             <Text style={styles.welcomeSubtitle}>
-              How are you feeling today?{'\n'}I'm here to help you find the right care.
+              How are you feeling today?{'\n'}I'm here to help you find the
+              right care.
             </Text>
             <View style={styles.promptChips}>
               {[
@@ -752,7 +760,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
 });
 
 export default ChatScreen;

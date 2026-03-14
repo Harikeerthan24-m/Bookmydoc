@@ -9,7 +9,9 @@ const OfflineBanner = () => {
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
-      const offline = !(state.isConnected && state.isInternetReachable !== false);
+      const offline = !(
+        state.isConnected && state.isInternetReachable !== false
+      );
       setIsOffline(offline);
       Animated.spring(slideAnim, {
         toValue: offline ? 0 : -50,
@@ -23,8 +25,15 @@ const OfflineBanner = () => {
   if (!isOffline) return null;
 
   return (
-    <Animated.View style={[styles.banner, { transform: [{ translateY: slideAnim }] }]}>
-      <Ionicons name="cloud-offline-outline" size={16} color="#fff" style={styles.icon} />
+    <Animated.View
+      style={[styles.banner, { transform: [{ translateY: slideAnim }] }]}
+    >
+      <Ionicons
+        name="cloud-offline-outline"
+        size={16}
+        color="#fff"
+        style={styles.icon}
+      />
       <Text style={styles.text}>No internet connection</Text>
     </Animated.View>
   );

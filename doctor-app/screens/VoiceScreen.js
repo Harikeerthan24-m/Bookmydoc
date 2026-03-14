@@ -337,7 +337,9 @@ const VoiceScreen = () => {
         >
           <Ionicons name="chatbubbles" size={20} color="#fff" />
           <Text style={styles.resultsNudgeText}>
-            I found {pendingDoctorCount} doctor{pendingDoctorCount !== 1 ? 's' : ''} for you. Tap to see them in Chat →
+            I found {pendingDoctorCount} doctor
+            {pendingDoctorCount !== 1 ? 's' : ''} for you. Tap to see them in
+            Chat →
           </Text>
         </TouchableOpacity>
       )}

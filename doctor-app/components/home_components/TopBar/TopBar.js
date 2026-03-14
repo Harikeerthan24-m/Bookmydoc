@@ -22,7 +22,10 @@ const TopBar = ({ navigation }) => {
               style={homeStyles.profileImage}
             />
           ) : (
-            <Image source={DefaultProfile} style={{ width: 50, height: 50, borderRadius: 25 }} />
+            <Image
+              source={DefaultProfile}
+              style={{ width: 50, height: 50, borderRadius: 25 }}
+            />
           )}
         </View>
       </TouchableOpacity>

@@ -70,7 +70,11 @@ const PreviousAppointments = ({ onClose }) => {
                 <Loading bgColor="white" />
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="calendar-outline" size={48} color={Global_Styles.Colors.textSecondary} />
+                  <Ionicons
+                    name="calendar-outline"
+                    size={48}
+                    color={Global_Styles.Colors.textSecondary}
+                  />
                   <Text style={styles.emptyTitle}>No appointments yet</Text>
                   <Text style={styles.emptySubtitle}>
                     Your past consultations will show up here.
