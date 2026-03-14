@@ -36,7 +36,7 @@ const SpecialistsRender = () => {
         {item.photoUrl ? (
           <Image
             style={{ width: '100%', height: '100%' }}
-            src={item?.photoUrl}
+            source={{ uri: item?.photoUrl }}
           />
         ) : (
           <Image
@@ -99,8 +99,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
     backgroundColor: 'white',
     height: 'auto',
-    width: 112,
-    borderRadius: 10,
+    width: Global_Styles.Screen.specialistWidth,
+    borderRadius: Global_Styles.Radius.sm,
     marginHorizontal: 10,
   },
   image: {
@@ -122,9 +122,9 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   imageContainer: {
-    width: 112,
+    width: Global_Styles.Screen.specialistWidth,
     height: 130,
-    borderRadius: 10,
+    borderRadius: Global_Styles.Radius.sm,
     overflow: 'hidden',
     backgroundColor: Global_Styles.PrimaryColour,
     alignItems: 'center',

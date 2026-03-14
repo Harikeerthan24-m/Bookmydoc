@@ -14,8 +14,17 @@ const ANDROID_WEB_CLIENT_ID = Constants.expoConfig?.extra?.ANDROID_WEB_CLIENT_ID
 const IOS_WEB_CLIENT_ID = Constants.expoConfig?.extra?.IOS_WEB_CLIENT_ID || ENV_IOS_WEB_CLIENT_ID;
 
 const __DEV__ = (APP_ENV || 'development') === 'development';
-import React, { StrictMode, useEffect } from 'react';
-import { Platform, StatusBar } from 'react-native';
+
+if (!__DEV__) {
+  console.log = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+  console.info = () => {};
+  console.debug = () => {};
+}
+
+import React, { StrictMode, useEffect, Component } from 'react';
+import { Platform, StatusBar, Text, View } from 'react-native';
 import 'react-native-devsettings';
 import 'react-native-devsettings/withAsyncStorage';
 import 'react-native-gesture-handler';
@@ -25,9 +34,27 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
 import firebase from '@react-native-firebase/app';
 import Layout from './Layout';
+import OfflineBanner from './components/OfflineBanner';
 import SplashScreen from './screens/SplashScreen';
 import { persistedStore, store } from './store';
 import Global_Styles from './utils/Global_Styles';
+
+class ErrorBoundary extends Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: 16, color: '#333' }}>Something went wrong. Please restart the app.</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const WEB_CLIENT_ID =
   Platform.OS === 'android' ? ANDROID_WEB_CLIENT_ID : IOS_WEB_CLIENT_ID;
@@ -79,7 +106,7 @@ export default function APP() {
   }, []);
 
   return (
-    <>
+    <ErrorBoundary>
       <StrictMode>
         <Provider store={store}>
           <PersistGate loading={<SplashScreen />} persistor={persistedStore}>
@@ -99,11 +126,12 @@ export default function APP() {
                 backgroundColor={Global_Styles.PrimaryColour}
               />
                <Layout />
+               <OfflineBanner />
               </>
             </AlertNotificationRoot>
           </PersistGate>
         </Provider>
       </StrictMode>
-    </>
+    </ErrorBoundary>
   );
 }

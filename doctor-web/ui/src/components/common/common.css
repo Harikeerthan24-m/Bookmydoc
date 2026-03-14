@@ -1,19 +1,6 @@
-.danger-text {
-  color: red;
-}
+.danger-text  { color: var(--color-danger); }
+.success-text { color: var(--color-success); }
+.warning-text { color: var(--color-warning); }
 
-.success-text {
-  color: red;
-}
-
-.warning-text {
-  color: red;
-}
-
-.text-md {
-  font-size: medium;
-}
-
-.text-sm {
-  font-size: smaller;
-}
+.text-md { font-size: var(--font-size-base); }
+.text-sm { font-size: var(--font-size-sm); }

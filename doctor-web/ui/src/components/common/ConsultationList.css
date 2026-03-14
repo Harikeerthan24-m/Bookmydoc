@@ -24,8 +24,8 @@
 }
 
 .consultation-item:hover {
-  background: #f1f5f9;
-  border-color: #18a0fb;
+  background: var(--color-bg-alt);
+  border-color: var(--color-primary);
 }
 
 .consultation-info {
@@ -56,12 +56,12 @@
 }
 
 .consultation-duration svg {
-  color: #18a0fb;
+  color: var(--color-primary);
 }
 
 .consultation-price {
   font-weight: 600;
-  color: #18a0fb;
+  color: var(--color-primary);
   font-size: 0.9rem;
 }
 

@@ -18,16 +18,16 @@ import {
   Image,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import Constants from 'expo-constants';
 import {
   useChatMutation,
   useGetChatHistoryQuery,
   useLazyGetChatHistoryQuery,
 } from '../store/slices/ai.slice';
-import Global_Styles from '../utils/Global_Styles';
-import ProfileImage from '../assets/images/doc1.png';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Global_Styles, { headerShadow } from '../utils/Global_Styles';
+import DoctorListCard from '../components/DoctorListCard';
 
 const WELCOME_TEXT = 'Your AI Health care Assistant';
 
@@ -89,6 +89,8 @@ const ChatScreen = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const flatListRef = useRef(null);
+  const lastSentAtRef = useRef(0);
+  const RATE_LIMIT_MS = 2000;
   const [chatMutation] = useChatMutation();
   const chatHistoryQueryArg = useMemo(() => ({ limit: PAGE_SIZE }), []);
   const { data: chatHistoryData, isLoading: isLoadingHistory } =
@@ -277,6 +279,8 @@ const ChatScreen = () => {
 
   const handleSend = useCallback(() => {
     if (!messageText.trim()) return;
+    if (Date.now() - lastSentAtRef.current < RATE_LIMIT_MS) return;
+    lastSentAtRef.current = Date.now();
     sendMessage(messageText);
   }, [messageText, sendMessage]);
 
@@ -287,48 +291,19 @@ const ChatScreen = () => {
         display_name: doctor?.name,
         star_rating: doctor?.rating,
         expertiseList: doctor?.specialization ? [doctor.specialization] : [],
-        location: {
-          city: doctor?.location,
-        },
+        location: { city: doctor?.location },
       };
 
       return (
-        <TouchableOpacity
+        <DoctorListCard
           key={doctor?.doctorId || `${doctor?.name}-${doctor?.specialization}`}
-          style={styles.docItem}
-          activeOpacity={0.8}
+          name={doctor?.name}
+          subtitle={doctor?.specialization}
+          detail={doctor?.location ? String(doctor.location) : ''}
           onPress={() =>
             navigation.navigate('DoctorProfile', { doctor: docForProfile })
           }
-        >
-          <View style={styles.docImageContainer}>
-            <Image style={styles.photoUrl} source={ProfileImage} />
-          </View>
-          <View style={styles.docTextContainer}>
-            <Text style={styles.docName}>{doctor?.name}</Text>
-            <Text style={styles.docDesignation}>
-              {doctor?.specialization || ''}
-            </Text>
-            <View style={styles.docBottomContainer}>
-              <View style={styles.docTimingContainer}>
-                <Text style={styles.docTiming}>
-                  {doctor?.location ? String(doctor.location) : ''}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={styles.docPlusIconContainer}
-                activeOpacity={0.8}
-                onPress={() =>
-                  navigation.navigate('DoctorProfile', {
-                    doctor: docForProfile,
-                  })
-                }
-              >
-                <FontAwesome name="plus" size={18} color="white" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableOpacity>
+        />
       );
     },
     [navigation],
@@ -413,7 +388,7 @@ const ChatScreen = () => {
     );
   }, [isLoading]);
 
-  const canSend = messageText.trim().length > 0 && !isLoading;
+  const canSend = messageText.trim().length > 0 && !isLoading && (Date.now() - lastSentAtRef.current >= RATE_LIMIT_MS);
 
   if (isLoadingHistory) {
     return (
@@ -434,11 +409,51 @@ const ChatScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
+      <View style={styles.header}>
+        <View style={styles.headerSpacer} />
+        <Text style={styles.headerTitle}>AI Assistant</Text>
+        <TouchableOpacity
+          style={styles.clearChatBtn}
+          onPress={() => {
+            setMessages([]);
+            setConversationHistory([]);
+          }}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.clearChatText}>Clear</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.chatContainer}>
         {showWelcome ? (
           <View style={styles.welcomeContainer}>
-            <View style={styles.welcomeBubble}>
-              <Text style={styles.welcomeText}>{WELCOME_TEXT}</Text>
+            <View style={styles.welcomeIconWrap}>
+              <Ionicons name="sparkles" size={36} color={Global_Styles.Colors.primary} />
+            </View>
+            <Text style={styles.welcomeGreeting}>
+              Hey{userName ? `, ${userName.split(' ')[0]}` : ''}! 👋
+            </Text>
+            <Text style={styles.welcomeSubtitle}>
+              How are you feeling today?{'\n'}I'm here to help you find the right care.
+            </Text>
+            <View style={styles.promptChips}>
+              {[
+                "I'm not feeling well",
+                'I have a fever and chills',
+                'I have a headache',
+                'I feel tired and dizzy',
+              ].map((prompt) => (
+                <TouchableOpacity
+                  key={prompt}
+                  style={styles.promptChip}
+                  activeOpacity={0.75}
+                  onPress={() => {
+                    setMessageText(prompt);
+                  }}
+                >
+                  <Text style={styles.promptChipText}>{prompt}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
         ) : (
@@ -503,7 +518,7 @@ const ChatScreen = () => {
             style={styles.waveformButton}
             onPress={() => navigation.navigate('Voice')}
           >
-            <MaterialCommunityIcons name="waveform" size={24} color="#000" />
+            <Ionicons name="mic" size={24} color="#000" />
           </TouchableOpacity>
         </View>
       </View>
@@ -516,6 +531,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: Constants.statusBarHeight + 12,
+    paddingBottom: 12,
+    paddingHorizontal: Global_Styles.Spacing.xl,
+    backgroundColor: '#ffffff',
+    ...headerShadow,
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '600',
+    color: Global_Styles.Colors.textPrimary,
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 44,
+  },
+  clearChatBtn: {
+    width: 44,
+    alignItems: 'flex-end',
+  },
+  clearChatText: {
+    fontSize: 14,
+    color: Global_Styles.Colors.primary,
+    fontWeight: '500',
+  },
   chatContainer: {
     flex: 1,
     paddingHorizontal: 20,
@@ -524,20 +567,50 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 40,
   },
-  welcomeBubble: {
-    borderRadius: 15,
-    padding: 20,
-    justifyContent: 'center',
+  welcomeIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Global_Styles.Colors.primaryLight,
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 20,
-    width: '100%',
   },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
+  welcomeGreeting: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: Global_Styles.Colors.textPrimary,
     textAlign: 'center',
+    marginBottom: 10,
+  },
+  welcomeSubtitle: {
+    fontSize: 15,
+    color: Global_Styles.Colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  promptChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  promptChip: {
+    backgroundColor: Global_Styles.Colors.primaryLight,
+    borderWidth: 1,
+    borderColor: Global_Styles.Colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: Global_Styles.Radius.xl,
+  },
+  promptChipText: {
+    fontSize: 13,
+    color: Global_Styles.Colors.primary,
+    fontWeight: '500',
   },
   listContent: {
     paddingVertical: 16,
@@ -662,7 +735,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#009EFF',
+    backgroundColor: Global_Styles.Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -680,63 +753,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Doctor card styles (match Explore search card pattern)
-  docItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#EDEDED',
-  },
-  docImageContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginRight: 12,
-    backgroundColor: '#F3F3F3',
-  },
-  docImage: {
-    width: '100%',
-    height: '100%',
-  },
-  docTextContainer: {
-    flex: 1,
-  },
-  docName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1C1C1C',
-  },
-  docDesignation: {
-    marginTop: 2,
-    fontSize: 13,
-    fontWeight: '600',
-    color: Global_Styles.PrimaryColour,
-  },
-  docBottomContainer: {
-    marginTop: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  docTimingContainer: {
-    flex: 1,
-    paddingRight: 10,
-  },
-  docTiming: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  docPlusIconContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: Global_Styles.PrimaryColour,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
 });
 
 export default ChatScreen;

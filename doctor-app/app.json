@@ -21,7 +21,7 @@
             "useFrameworks": "static"
           },
           "android": {
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": false
           }
         }
       ],
@@ -31,7 +31,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "The app accesses your photos to let you share them with your friends."
+          "photosPermission": "Book My Doctor accesses your photos to update your profile picture."
         }
       ]
     ],
@@ -40,9 +40,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.app.BookMyDoctorAppointment",
       "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        },
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": ["BookMyDoctorAppointment"]
@@ -87,7 +84,7 @@
       }
     },
     "notification": {
-      "icon": "./assets/favicon.png",
+      "icon": "./assets/adaptive-icon.png",
       "color": "#18A0FB"
     }
   }

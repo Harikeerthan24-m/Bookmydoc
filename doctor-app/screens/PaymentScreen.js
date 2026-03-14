@@ -11,7 +11,7 @@ import Constants from 'expo-constants';
 import { useSelector } from 'react-redux';
 import RazorpayCheckout from 'react-native-razorpay';
 import { Ionicons } from '@expo/vector-icons';
-import Global_Styles from '../utils/Global_Styles';
+import Global_Styles, { headerShadow } from '../utils/Global_Styles';
 import PaymentButton from '../components/payment_component/PaymentButton';
 import {
   bookingSelector,
@@ -34,7 +34,6 @@ import { API_URL } from '@env';
 const Payment = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const booking = useSelector(bookingSelector);
-  // const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [generatePayment, generatePaymentResult] =
     useGeneratePaymentSecretMutation();
   const [placeBooking, placeBookingResult] = useCreateBookingMutation();
@@ -70,15 +69,6 @@ const Payment = ({ navigation }) => {
     if (!validateBooking()) {
       return;
     }
-    // await placeBooking({
-    //   doctor_id: booking?.doctor?.uid,
-    //   service_id: booking?.service?.service_id,
-    //   slot_id: booking?.slot?.slot_id,
-    //   date: `${booking?.year}-${String(booking?.month).padStart(2, '0')}-${booking?.date}`,
-    //   payment: {},
-    // });
-    // navigation.navigate('Notifications');
-
     const result = await generatePayment({
       doctor_id: booking?.doctor?.uid,
       service_id: booking?.service?.service_id,
@@ -137,69 +127,6 @@ const Payment = ({ navigation }) => {
         });
     }, 1500);
 
-    // setLoading(true);
-    // const { error: sheetError } = await initPaymentSheet({
-    //   customerId: result?.data?.customer,
-    //   customerEphemeralKeySecret: result?.data?.ephemeralKey,
-    //   paymentIntentClientSecret: result?.data?.paymentIntent,
-    //   returnURL: `${expoApp.expo.scheme}://payment-sheet`,
-    //   allowsDelayedPaymentMethods: false,
-    //   merchantDisplayName: expoApp.expo.merchantDisplayName,
-    //   defaultBillingDetails: {
-    //     name: '',
-    //   },
-    // });
-    // if (sheetError) {
-    //   AlertNotification({
-    //     title: sheetError?.code,
-    //     textBody: sheetError?.message,
-    //     variant: ALERT_DIALOG,
-    //     type: ALERT_DANGER,
-    //   });
-    //   setLoading(false);
-    //   return;
-    // }
-
-    // setLoading(false);
-    // const { error } = await presentPaymentSheet();
-    // if (error) {
-    //   if (error.code === PaymentSheetError.Failed) {
-    //     // Handle failed
-    //     AlertNotification({
-    //       title: error?.code,
-    //       textBody: error?.message,
-    //       variant: ALERT_DIALOG,
-    //       type: ALERT_DANGER,
-    //     });
-    //   } else if (error.code === PaymentSheetError.Canceled) {
-    //     // Handle canceled
-    //     AlertNotification({
-    //       title: error?.code,
-    //       textBody: error?.message,
-    //       variant: ALERT_TOAST,
-    //       type: ALERT_WARNING,
-    //     });
-    //   }
-    // } else {
-    //   // Payment succeeded
-    //   AlertNotification({
-    //     title: 'Payment Success!!',
-    //     textBody: 'Placing your booking now.',
-    //     variant: ALERT_TOAST,
-    //     type: ALERT_SUCCESS,
-    //   });
-    //   // Placing Booking
-    //   await placeBooking({
-    //     doctor_id: booking?.doctor?.uid,
-    //     service_id: booking?.service?.service_id,
-    //     slot_id: booking?.slot?.slot_id,
-    //     date: `${booking?.year}-${booking?.month}-${booking?.date}`,
-    //     payment: {
-    //       ephemeralId: result?.data?.ephemeralKey,
-    //     },
-    //   });
-    //   navigation.navigate('Notifications');
-    // }
   };
 
   return (
@@ -213,13 +140,14 @@ const Payment = ({ navigation }) => {
             <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Payment & Booking</Text>
+          <View style={{ width: 24 }} />
         </View>
 
         <View style={styles.doctorInfo}>
           {booking?.doctor.photoUrl ? (
             <Image
               style={styles.doctorImage}
-              src={booking?.doctor?.photoUrl}
+              source={{ uri: booking?.doctor?.photoUrl }}
               resizeMode="cover"
             />
           ) : (
@@ -299,12 +227,17 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Constants.statusBarHeight,
+    paddingTop: Constants.statusBarHeight + 8,
+    paddingBottom: 14,
+    paddingHorizontal: 20,
+    backgroundColor: '#ffffff',
+    ...headerShadow,
   },
   headerTitle: {
+    flex: 1,
     fontSize: 20,
     fontWeight: 'bold',
-    marginLeft: '20%',
+    textAlign: 'center',
   },
   doctorInfo: {
     flexDirection: 'row',

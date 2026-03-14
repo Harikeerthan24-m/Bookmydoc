@@ -143,7 +143,7 @@ const MyProfile = ({ navigation }) => {
     formData.append('weight', Number(profileInfo.weight ?? 0));
     formData.append('gender', String(profileInfo.gender));
     formData.append('dob', String(profileInfo.dob));
-    formData.append('blood_group', String(profileInfo.blood_group));
+
     if (profileInfo?.file) {
       formData.append(
         'file',
@@ -310,30 +310,6 @@ const MyProfile = ({ navigation }) => {
           <View style={styles.infoRow}>
             <Text style={styles.label}>Date of Birth</Text>
             {renderDatePicker()}
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Blood Group</Text>
-            <DropdownSelect
-              placeholder="Select Blood Group"
-              defaultValue={{ label: profileInfo?.blood_group }}
-              data={[
-                { label: 'A+' },
-                { label: 'B+' },
-                { label: 'A-' },
-                { label: 'B-' },
-                { label: 'AB+' },
-                { label: 'AB-' },
-                { label: 'O+' },
-                { label: 'O-' },
-              ]}
-              onSelect={(item) => {
-                setProfileInfo((state) => ({
-                  ...state,
-                  blood_group: item?.label,
-                }));
-              }}
-            />
           </View>
 
           <View style={styles.infoRow}>

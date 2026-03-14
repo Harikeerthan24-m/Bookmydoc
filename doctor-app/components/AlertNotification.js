@@ -36,32 +36,6 @@ export function AlertNotification({
   onHide,
   autoClose = true,
 }) {
-  // #region agent log
-  const titleType = typeof title;
-  const textBodyType = typeof textBody;
-  if (titleType !== 'string' || textBodyType !== 'string') {
-    fetch('http://127.0.0.1:7243/ingest/1eb53b69-292c-46db-8a7f-0aa5f80285a1', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'AlertNotification.js:AlertNotification',
-        message: 'AlertNotification received non-string title or textBody',
-        data: {
-          titleType,
-          textBodyType,
-          titleKeys:
-            title && typeof title === 'object' ? Object.keys(title) : null,
-          textBodyKeys:
-            textBody && typeof textBody === 'object'
-              ? Object.keys(textBody)
-              : null,
-        },
-        timestamp: Date.now(),
-        hypothesisId: 'A',
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
   const safeTitle = toAlertString(title, 'Notification');
   const safeTextBody = toAlertString(textBody, '');
   switch (variant) {

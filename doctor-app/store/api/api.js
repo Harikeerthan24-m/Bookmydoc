@@ -41,8 +41,24 @@ export function normalizeApiError(error) {
     typeof serverData === 'object' &&
     (serverData.message || serverData.error)
   ) {
+    const resolvedStatus = serverData.statusCode ?? statusCode;
+
+    // Mask auth/token errors — never expose raw JWT/token messages to the user
+    if (
+      resolvedStatus === 401 ||
+      resolvedStatus === 403 ||
+      /token|jwt|unauthorized|forbidden/i.test(serverData.message ?? '')
+    ) {
+      return {
+        statusCode: resolvedStatus,
+        message: 'Something went wrong.',
+        error: { message: 'Please try again or log in again.', code: 'AUTH_ERROR' },
+        data: null,
+      };
+    }
+
     return {
-      statusCode: serverData.statusCode ?? statusCode,
+      statusCode: resolvedStatus,
       message: serverData.message ?? 'Something went wrong.',
       error:
         typeof serverData.error === 'object'
@@ -116,14 +132,6 @@ export function normalizeApiError(error) {
     data: null,
   };
 }
-
-console.log('[API CONFIG]', {
-  APP_ENV,
-  LOCAL_IP,
-  API_PORT,
-  APP_URL,
-  BASE_URL,
-});
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

@@ -26,7 +26,7 @@
 }
 
 .create-consultation-btn {
-  background: linear-gradient(135deg, #18a0fb, #0ea5e9);
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 12px;
@@ -39,7 +39,7 @@
 }
 
 .create-consultation-btn:hover {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: var(--color-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(24, 160, 251, 0.4);
 }
@@ -65,11 +65,11 @@
 .service-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  border-color: #18a0fb;
+  border-color: var(--color-primary);
 }
 
 .service-card.popular {
-  border-color: #18a0fb;
+  border-color: var(--color-primary);
   transform: scale(1.05);
 }
 
@@ -81,7 +81,7 @@
   position: absolute;
   top: 1rem;
   right: -0.5rem;
-  background: linear-gradient(135deg, #18a0fb, #0ea5e9);
+  background: var(--color-primary);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 20px;
@@ -94,15 +94,15 @@
 /* Coming Soon Cards */
 .coming-soon-card {
   opacity: 0.7;
-  border: 2px dashed #cbd5e1;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px dashed var(--color-border);
+  background: var(--color-bg);
 }
 
 .coming-soon-badge {
   position: absolute;
   top: 1rem;
   right: -0.5rem;
-  background: linear-gradient(135deg, #64748b, #475569);
+  background: var(--color-text-muted);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 20px;
@@ -160,7 +160,7 @@
 }
 
 .service-duration svg {
-  color: #18a0fb;
+  color: var(--color-primary);
 }
 
 .service-price {
@@ -172,13 +172,13 @@
 .service-price .currency {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #18a0fb;
+  color: var(--color-primary);
 }
 
 .service-price .amount {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #18a0fb;
+  color: var(--color-primary);
   margin-left: 0.25rem;
 }
 
@@ -210,12 +210,12 @@
 }
 
 .service-actions .btn-primary {
-  background: linear-gradient(135deg, #18a0fb, #0ea5e9);
+  background: var(--color-primary);
   color: white;
 }
 
 .service-actions .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(24, 160, 251, 0.3);
 }
@@ -281,7 +281,7 @@
 
 .book-consultation-btn {
   width: 100%;
-  background: linear-gradient(135deg, #18a0fb, #0ea5e9);
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 12px;
@@ -294,7 +294,7 @@
 }
 
 .book-consultation-btn:hover {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(24, 160, 251, 0.4);
 }
@@ -311,7 +311,7 @@
 
 .edit-consultation-btn {
   flex: 1;
-  background: linear-gradient(135deg, #18a0fb, #0ea5e9);
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -323,7 +323,7 @@
 }
 
 .edit-consultation-btn:hover {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
@@ -384,7 +384,7 @@
 }
 
 .step-number {
-  background: linear-gradient(135deg, #18a0fb, #0ea5e9);
+  background: var(--color-primary);
   color: white;
   width: 40px;
   height: 40px;
@@ -521,7 +521,7 @@
 }
 
 .confirm-book-btn {
-  background: linear-gradient(135deg, #18a0fb, #0ea5e9);
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -533,7 +533,7 @@
 }
 
 .confirm-book-btn:hover {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: var(--color-primary-hover);
 }
 
 .confirm-book-btn:disabled {
@@ -591,14 +591,14 @@
 
 .form-group select:focus {
   outline: none;
-  border-color: #18a0fb;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(24, 160, 251, 0.1);
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #18a0fb;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(24, 160, 251, 0.1);
 }
 

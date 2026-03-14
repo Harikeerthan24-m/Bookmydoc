@@ -29,9 +29,9 @@ const SignupScreen = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
-    name: 'tarek',
-    email: 'tarekmonjur@gmail.com',
-    password: 'tarekmonjur',
+    name: '',
+    email: '',
+    password: '',
     role: 'customer',
   });
   const [formValidation, setFormValidation] = useState({

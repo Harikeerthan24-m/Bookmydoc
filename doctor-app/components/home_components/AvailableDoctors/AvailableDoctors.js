@@ -54,7 +54,7 @@ const AvailableDoctors = () => {
         </View>
         <View style={styles.bottomRightContainer}>
           {item.photoUrl ? (
-            <Image style={styles.image} src={item?.photoUrl} />
+            <Image style={styles.image} source={{ uri: item?.photoUrl }} />
           ) : (
             <Image style={styles.image} source={ProfileImage} />
           )}
@@ -107,11 +107,11 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     marginBottom: 20,
-    borderRadius: 10,
-    backgroundColor: '#18A0FB',
-    padding: 15,
-    width: 305,
-    marginRight: 10,
+    borderRadius: Global_Styles.Radius.md,
+    backgroundColor: Global_Styles.Colors.primary,
+    padding: Global_Styles.Spacing.lg,
+    width: Global_Styles.Screen.cardWidth,
+    marginRight: Global_Styles.Spacing.md,
   },
   topContainer: {
     marginBottom: 10,
@@ -146,13 +146,13 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   bookNowButton: {
-    backgroundColor: '#2CAAFF',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    backgroundColor: Global_Styles.Colors.primaryDark,
+    paddingVertical: Global_Styles.Spacing.xs,
+    paddingHorizontal: Global_Styles.Spacing.sm,
+    borderRadius: Global_Styles.Radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: Global_Styles.Spacing.sm,
     marginRight: 60,
   },
   bookNowText: {

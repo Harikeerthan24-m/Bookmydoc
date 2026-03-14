@@ -562,6 +562,43 @@ export const authLogout = createAsyncThunk(
   },
 );
 
+// region DELETE ACCOUNT
+export const authDeleteAccount = createAsyncThunk(
+  'auth/deleteAccount',
+  async (_, thunkAPI) => {
+    const state = thunkAPI.getState();
+    const accessToken =
+      state?.authSlice?.user?.accessToken ??
+      state?.authSlice?.user?.stsTokenManager?.accessToken;
+    try {
+      const response = await apiClient.request({
+        method: 'delete',
+        url: '/user/delete-account',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      try {
+        await auth.signOut();
+        await signOut(auth);
+        await GoogleSignin.signOut();
+      } catch (err) {}
+      return response.data;
+    } catch (error) {
+      if (error?.data || error?.statusCode) {
+        return thunkAPI.rejectWithValue(error);
+      } else {
+        return thunkAPI.rejectWithValue({
+          error: error,
+          message: error?.message,
+          data: null,
+          statusCode: error?.code || 500,
+        });
+      }
+    }
+  },
+);
+
 // region PROFILE
 export const fetchUserProfile = createAsyncThunk(
   'api/profile',
@@ -965,6 +1002,22 @@ export const AuthSlice = createSlice({
         state.isAuthenticated = false;
       })
       .addCase(authLogout.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // region DELETE ACCOUNT ACTION
+      .addCase(authDeleteAccount.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(authDeleteAccount.fulfilled, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.profile = {};
+        state.error = null;
+        state.isAuthenticated = false;
+      })
+      .addCase(authDeleteAccount.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

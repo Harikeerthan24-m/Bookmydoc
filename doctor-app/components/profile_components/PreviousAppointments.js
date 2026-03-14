@@ -9,7 +9,7 @@ import {
   Modal,
   RefreshControl,
 } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import Global_Styles from '../../utils/Global_Styles';
 import { useGetBookingsQuery } from './../../store/slices';
 import ProfileImage from './../../assets/images/doc1.png';
@@ -27,7 +27,7 @@ const PreviousAppointments = ({ onClose }) => {
         {item?.doctor?.photoUrl ? (
           <Image
             style={styles.image}
-            src={item?.doctor?.photoUrl}
+            source={{ uri: item?.doctor?.photoUrl }}
             resizeMode="cover"
           />
         ) : (
@@ -66,13 +66,17 @@ const PreviousAppointments = ({ onClose }) => {
           <FlatList
             data={data ?? []}
             ListEmptyComponent={
-              <View style={{ paddingVertical: 20 }}>
-                {isLoading ? (
-                  <Loading bgColor="white" />
-                ) : (
-                  <Text style={{ textAlign: 'center' }}>No Booking</Text>
-                )}
-              </View>
+              isLoading ? (
+                <Loading bgColor="white" />
+              ) : (
+                <View style={styles.emptyState}>
+                  <Ionicons name="calendar-outline" size={48} color={Global_Styles.Colors.textSecondary} />
+                  <Text style={styles.emptyTitle}>No appointments yet</Text>
+                  <Text style={styles.emptySubtitle}>
+                    Your past consultations will show up here.
+                  </Text>
+                </View>
+              )
             }
             renderItem={renderItem}
             keyExtractor={(item) => item?.booking_id}
@@ -163,6 +167,24 @@ const styles = StyleSheet.create({
   },
   flatListContent: {
     padding: 10,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Global_Styles.Colors.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: Global_Styles.Colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   imageContainer: {
     width: 70,

@@ -1,42 +1,128 @@
-.App {
-  text-align: center;
+/* ============================================================
+   APP-LEVEL GLOBAL STYLES
+   Component-specific styles live in their own CSS files.
+   ============================================================ */
+
+/* ── Bootstrap primary color overrides ── */
+.btn-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  font-family: var(--font-family) !important;
+  font-weight: var(--font-weight-semibold) !important;
+  border-radius: var(--radius-md) !important;
 }
 
-body {
-  font-family: 'Poppins', sans-serif;
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+  box-shadow: var(--shadow-primary) !important;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.btn-outline-primary {
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.btn-outline-primary:hover {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #fff !important;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast), opacity var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* ── Status Badges ── */
+.status-badge {
+  padding: 3px var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: capitalize;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  letter-spacing: 0.01em;
 }
 
-.App-link {
-  color: #61dafb;
+.badge-success {
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.badge-warning {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.badge-info {
+  background: var(--color-info-light);
+  color: var(--color-info);
+}
+
+.badge-danger {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.badge-secondary {
+  background: rgba(100, 116, 139, 0.1);
+  color: var(--color-text-muted);
+}
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center;
+  padding: var(--space-12) var(--space-8);
+  color: var(--color-text-muted);
+}
+
+.empty-state i {
+  font-size: 2.25rem;
+  margin-bottom: var(--space-4);
+  color: var(--color-border);
+  display: block;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ── App Card Base ── */
+.app-card {
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.app-card:hover {
+  border-color: rgba(24, 160, 251, 0.25);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Form Focus Ring ── */
+.form-control:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-light) !important;
+  outline: none !important;
+}
+
+/* ── Bootstrap font override ── */
+body,
+.btn,
+.form-control,
+input,
+textarea,
+select {
+  font-family: var(--font-family) !important;
 }

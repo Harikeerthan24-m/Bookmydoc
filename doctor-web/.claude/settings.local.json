@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-web\" && npm run start:dev)",
+      "Bash(cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-web\" && npm run start:ui:dev)",
+      "Bash(cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-web\\\\ui\" && set PORT=3001 && npx react-scripts start)",
+      "Bash(cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-app\" && npm run android)",
+      "Bash(cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-web\\\\ui\" && npx react-scripts start)",
+      "Bash(netstat -ano | findstr :3000 | findstr LISTENING)",
+      "Bash(taskkill /PID 37548 /F)",
+      "Bash(cmd /c \"taskkill /PID 37548 /F\")",
+      "Bash(cmd /c \"netstat -ano | findstr :3000\")",
+      "Bash(cmd /c \"netstat -ano | findstr LISTEN | findstr :3000\")",
+      "Bash(sleep 3 && cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-web\\\\ui\" && npx react-scripts start)",
+      "Bash(cmd /c \"for /f \\\\\"tokens=5\\\\\" %a in \\('netstat -aon ^| findstr 3000'\\) do @echo %a\" 2>&1 | head -5)",
+      "Bash(cmd /c \"netstat -aon 2>&1\" | grep -i \"3000\")",
+      "Bash(cmd /c \"taskkill /IM node.exe /F\" 2>&1 || true)",
+      "Bash(sleep 15 && cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-web\\\\ui\" && npx react-scripts start)",
+      "Bash(cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-web\\\\ui\" && cmd /c \"set PORT=3001 && npx react-scripts start\")",
+      "Bash(cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-web\\\\ui\" && PORT=3001 npx react-scripts start)",
+      "Bash(netstat -ano | grep \":3001\" | head -5)",
+      "Bash(cd \"C:\\\\Users\\\\Asus\\\\OneDrive\\\\Desktop\\\\Work\\\\Bookmydoc-1\\\\doctor-web\\\\ui\" && PORT=3002 npx react-scripts start)"
+    ]
+  }
+}

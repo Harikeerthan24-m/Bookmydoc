@@ -1,50 +1,41 @@
-/* Professional Multiple Select Component Styling */
+/* Multiple Select Component Styling */
 
-/* Styling the tags container */
 .tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 15px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
   min-height: 30px;
-  padding: 10px;
-  background: #f8fafe;
-  border-radius: 12px;
-  border: 2px solid #e8f4fd;
-  transition: all 0.3s ease;
+  padding: var(--space-3);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  transition: border-color var(--transition-base);
 }
 
 .tags-container:hover {
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
-/* Styling individual tags */
 .tag {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 25px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   margin: 0;
-  font-size: 0.9rem;
-  font-weight: 500;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-  transition: all 0.3s ease;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-base);
 }
 
-.tag:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-}
-
-/* Button to remove tags */
 .remove-tag {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(24, 160, 251, 0.15);
   border: none;
-  color: white;
-  font-size: 14px;
-  margin-left: 8px;
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  margin-left: var(--space-2);
   cursor: pointer;
   border-radius: 50%;
   width: 20px;
@@ -52,35 +43,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .remove-tag:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
+  background: rgba(24, 160, 251, 0.25);
 }
 
-/* Dropdown styling */
 .form-control {
-  margin-top: 8px;
-  padding: 15px 20px;
-  border: 2px solid #e8f4fd;
-  border-radius: 12px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background-color: #ffffff;
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  background-color: var(--color-card);
   cursor: pointer;
 }
 
-/* Focus effect */
 .form-control:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
   outline: none;
-  transform: translateY(-1px);
 }
 
-/* Select dropdown with custom arrow */
 select.form-control {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 12px center;
@@ -90,31 +76,14 @@ select.form-control {
   appearance: none;
 }
 
-/* Label styling */
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 1rem;
-  letter-spacing: 0.3px;
-}
-
-/* Mobile responsiveness */
 @media (max-width: 768px) {
   .tags-container {
-    padding: 8px;
-    gap: 8px;
+    padding: var(--space-2);
+    gap: var(--space-2);
   }
 
   .tag {
-    font-size: 0.8rem;
-    padding: 6px 12px;
-  }
-
-  .remove-tag {
-    width: 18px;
-    height: 18px;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
+    padding: var(--space-1) var(--space-2);
   }
 }

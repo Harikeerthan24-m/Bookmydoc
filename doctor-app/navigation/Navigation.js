@@ -15,7 +15,6 @@ import DoctorProfile from '../screens/DoctorProfile';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import ChatScreen from '../screens/ChatScreen';
 import Payment from '../screens/PaymentScreen';
-// import DoctorAppointment from '../components/explore_components/doctorprofile_components/doctorappointmentbottom/DoctorApppointment';
 import MyProfile from '../screens/MyProfile';
 import VoiceScreen from '../screens/VoiceScreen';
 
@@ -92,6 +91,7 @@ const TabNavigator = () => {
   return (
     <Tab.Navigator
       initialRouteName="Chat"
+      backBehavior="none"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size, focused }) => {
           let iconComponent;
@@ -185,7 +185,6 @@ const Navigation = () => {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Main" component={TabNavigator} />
         <Stack.Screen name="DoctorProfile" component={DoctorProfile} />
-        {/* <Stack.Screen name="DoctorAppointment" component={DoctorAppointment} /> */}
         <Stack.Screen name="Payment" component={Payment} />
         <Stack.Screen name="MyProfile" component={MyProfile} />
         <Stack.Screen name="Voice" component={VoiceScreen} />
