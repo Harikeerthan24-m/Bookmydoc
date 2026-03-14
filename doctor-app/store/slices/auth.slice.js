@@ -562,6 +562,43 @@ export const authLogout = createAsyncThunk(
   },
 );
 
+// region DELETE ACCOUNT
+export const authDeleteAccount = createAsyncThunk(
+  'auth/deleteAccount',
+  async (_, thunkAPI) => {
+    const state = thunkAPI.getState();
+    const accessToken =
+      state?.authSlice?.user?.accessToken ??
+      state?.authSlice?.user?.stsTokenManager?.accessToken;
+    try {
+      const response = await apiClient.request({
+        method: 'delete',
+        url: '/user/delete-account',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      try {
+        await auth.signOut();
+        await signOut(auth);
+        await GoogleSignin.signOut();
+      } catch (err) {}
+      return response.data;
+    } catch (error) {
+      if (error?.data || error?.statusCode) {
+        return thunkAPI.rejectWithValue(error);
+      } else {
+        return thunkAPI.rejectWithValue({
+          error: error,
+          message: error?.message,
+          data: null,
+          statusCode: error?.code || 500,
+        });
+      }
+    }
+  },
+);
+
 // region PROFILE
 export const fetchUserProfile = createAsyncThunk(
   'api/profile',
@@ -832,7 +869,27 @@ export const AuthSlice = createSlice({
         let errorMessage;
         const code =
           serverErrorObj?.error?.code || serverErrorObj?.error?.statusCode;
-        if (code === 'auth/invalid-credential') {
+        const statusCode = serverErrorObj?.statusCode;
+
+        if (statusCode === 408 || code === 'ERR_TIMEOUT') {
+          message = 'Request timed out.';
+          errorMessage =
+            'The server took too long to respond. Ensure the backend is running and try again.';
+        } else if (statusCode === 499 || code === 'ERR_CANCELED') {
+          message = 'Request canceled.';
+          errorMessage =
+            'The request was canceled. Check that the backend server is running and the app API URL/port in .env is correct.';
+        } else if (
+          code === 'ERR_NETWORK' ||
+          code === 'ECONNREFUSED' ||
+          code === 'ECONNRESET' ||
+          serverErrorObj?.message === 'Connection failed.'
+        ) {
+          message = 'Connection failed.';
+          errorMessage =
+            serverErrorObj?.error?.message ||
+            'Unable to reach the server. Check your connection and that the backend is running.';
+        } else if (code === 'auth/invalid-credential') {
           message = 'Invalid Credentials.';
           errorMessage = 'Please try again with valid credentials';
         } else if (code === 'auth/user-not-found') {
@@ -852,12 +909,15 @@ export const AuthSlice = createSlice({
           message = 'Email already exists.';
           errorMessage = 'Please try with using another email address';
         } else {
-          message = 'Something went wrong';
+          message = serverErrorObj?.message ?? 'Something went wrong';
+          errorMessage =
+            serverErrorObj?.error?.message ?? 'Please try again later.';
         }
 
         state.error = {
           ...serverErrorObj,
           error: {
+            ...serverErrorObj?.error,
             message: errorMessage,
           },
           message,
@@ -945,6 +1005,22 @@ export const AuthSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      // region DELETE ACCOUNT ACTION
+      .addCase(authDeleteAccount.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(authDeleteAccount.fulfilled, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.profile = {};
+        state.error = null;
+        state.isAuthenticated = false;
+      })
+      .addCase(authDeleteAccount.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       // region PROFILE UPDATE ACTION
       .addCase(updateUserProfile.pending, (state) => {
         state.loading = true;
@@ -987,7 +1063,7 @@ export const AuthSlice = createSlice({
       .addCase(sendVerifyEmail.rejected, (state, action) => {
         state.loading = false;
         const serverErrorObj = action?.payload;
-        const errorMessages = handleFirebaseError(error);
+        const errorMessages = handleFirebaseError(serverErrorObj);
         if (errorMessages?.message) {
           state.error = {
             ...serverErrorObj,

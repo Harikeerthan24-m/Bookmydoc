@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Card, Button, Badge, Alert } from 'react-bootstrap';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { NotificationsSlice } from '../../store/slices/notifications.slice';
 import { useUpdateBookingMutation } from '../../store/slices';
 import Loading from '../common/Loading';
@@ -33,31 +35,20 @@ const NotificationsPage = () => {
   const allNotifications = notifications || [];
   const unreadNotifications = allNotifications.filter((n) => !n.read);
 
-  // Check for reschedule requests - look for multiple indicators
+  // Check for reschedule requests
   const rescheduleRequests = allNotifications.filter((n) => {
-    // Debug: Log notification structure
-    console.log('Notification structure:', n);
-
     const notificationText = (
       typeof n.notification === 'string'
         ? n.notification
         : n.notification?.body || ''
     ).toLowerCase();
 
-    // Check if it's a reschedule request notification
-    const isReschedule =
+    return (
       n.context?.actions?.includes('approve_reschedule') ||
       notificationText.includes('reschedule') ||
       notificationText.includes('rescheduled') ||
-      n.type === 'reschedule_request';
-
-    console.log(
-      'Is reschedule notification:',
-      isReschedule,
-      'Text:',
-      notificationText,
+      n.type === 'reschedule_request'
     );
-    return isReschedule;
   });
 
   const getFilteredNotifications = () => {
@@ -73,35 +64,19 @@ const NotificationsPage = () => {
 
   // Handle reschedule approval
   const handleApproveReschedule = async (bookingId, notificationId) => {
-    console.log('🟢 APPROVE CLICKED:', { bookingId, notificationId });
     try {
-      // Add to loading set
       setLoadingNotifications((prev) => new Set(prev).add(notificationId));
 
-      console.log('🚀 Sending approve request:', {
-        bookingId,
-        data: { approve_reschedule: true },
-      });
-
-      const result = await updateBooking({
+      await updateBooking({
         id: bookingId,
-        data: {
-          approve_reschedule: true,
-        },
+        data: { approve_reschedule: true },
       }).unwrap();
 
-      console.log('✅ Approve response:', result);
-
-      // Mark notification as read
       await markAsRead(notificationId);
-
-      // Show success message
-      alert('Reschedule request approved successfully!');
+      toast.success('Reschedule request approved successfully!');
     } catch (error) {
-      console.error('Error approving reschedule:', error);
-      alert('Error approving reschedule request. Please try again.');
+      toast.error('Error approving reschedule request. Please try again.');
     } finally {
-      // Remove from loading set
       setLoadingNotifications((prev) => {
         const newSet = new Set(prev);
         newSet.delete(notificationId);
@@ -112,20 +87,10 @@ const NotificationsPage = () => {
 
   // Handle reschedule rejection
   const handleRejectReschedule = async (bookingId, notificationId) => {
-    console.log('🔴 REJECT CLICKED:', { bookingId, notificationId });
     try {
-      // Add to loading set
       setLoadingNotifications((prev) => new Set(prev).add(notificationId));
 
-      console.log('🚀 Sending reject request:', {
-        bookingId,
-        data: {
-          reject_reschedule: true,
-          rejection_reason: 'Not available at requested time',
-        },
-      });
-
-      const result = await updateBooking({
+      await updateBooking({
         id: bookingId,
         data: {
           reject_reschedule: true,
@@ -133,18 +98,11 @@ const NotificationsPage = () => {
         },
       }).unwrap();
 
-      console.log('✅ Reject response:', result);
-
-      // Mark notification as read
       await markAsRead(notificationId);
-
-      // Show success message
-      alert('Reschedule request rejected successfully!');
+      toast.success('Reschedule request rejected successfully!');
     } catch (error) {
-      console.error('Error rejecting reschedule:', error);
-      alert('Error rejecting reschedule request. Please try again.');
+      toast.error('Error rejecting reschedule request. Please try again.');
     } finally {
-      // Remove from loading set
       setLoadingNotifications((prev) => {
         const newSet = new Set(prev);
         newSet.delete(notificationId);
@@ -184,6 +142,7 @@ const NotificationsPage = () => {
 
   return (
     <Container fluid className="notifications-page">
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="notifications-header">
         <h2>Notifications</h2>
         <div className="header-actions">
@@ -301,16 +260,10 @@ const NotificationsPage = () => {
                             onClick={() => {
                               const bookingId = extractBookingId(notification);
                               if (!bookingId) {
-                                alert(
-                                  'Error: Booking ID not found. Cannot process request.',
-                                );
+                                toast.error('Booking ID not found. Cannot process request.');
                                 return;
                               }
-                              // Approving reschedule
-                              handleApproveReschedule(
-                                bookingId,
-                                notification.id,
-                              );
+                              handleApproveReschedule(bookingId, notification.id);
                             }}
                             disabled={loadingNotifications.has(notification.id)}
                             className="me-2"
@@ -326,16 +279,10 @@ const NotificationsPage = () => {
                             onClick={() => {
                               const bookingId = extractBookingId(notification);
                               if (!bookingId) {
-                                alert(
-                                  'Error: Booking ID not found. Cannot process request.',
-                                );
+                                toast.error('Booking ID not found. Cannot process request.');
                                 return;
                               }
-                              // Rejecting reschedule
-                              handleRejectReschedule(
-                                bookingId,
-                                notification.id,
-                              );
+                              handleRejectReschedule(bookingId, notification.id);
                             }}
                             disabled={loadingNotifications.has(notification.id)}
                           >

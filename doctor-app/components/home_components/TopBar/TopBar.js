@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Constants from 'expo-constants';
 import { Ionicons } from '@expo/vector-icons';
 import { userSelector, profileSelector } from './../../../store';
-import Global_Styles from '../../../utils/Global_Styles';
+import Global_Styles, { headerShadow } from '../../../utils/Global_Styles';
+import DefaultProfile from '../../../assets/images/default_profile.png';
 
 const TopBar = ({ navigation }) => {
   const user = useSelector(userSelector);
@@ -21,7 +22,7 @@ const TopBar = ({ navigation }) => {
               style={homeStyles.profileImage}
             />
           ) : (
-            <Ionicons name="person-circle-outline" size={55} />
+            <Image source={DefaultProfile} style={{ width: 50, height: 50, borderRadius: 25 }} />
           )}
         </View>
       </TouchableOpacity>
@@ -39,7 +40,7 @@ const TopBar = ({ navigation }) => {
 
       <TouchableOpacity
         style={homeStyles.notificationIconContainer}
-        onPress={() => navigation.navigate('ChatScreen')}
+        onPress={() => navigation.navigate('Main', { screen: 'Chat' })}
       >
         <Ionicons name="chatbubbles-outline" size={30} />
       </TouchableOpacity>
@@ -53,8 +54,11 @@ const homeStyles = StyleSheet.create({
   welcome_container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Constants.statusBarHeight,
-    marginHorizontal: Global_Styles.MarginHorizontal,
+    paddingTop: Constants.statusBarHeight + 10,
+    paddingBottom: 12,
+    paddingHorizontal: Global_Styles.MarginHorizontal,
+    backgroundColor: '#ffffff',
+    ...headerShadow,
   },
   logoContainer: {
     flex: 1,

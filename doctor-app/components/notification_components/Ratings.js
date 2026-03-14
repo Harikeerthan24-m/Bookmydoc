@@ -107,7 +107,7 @@ const RatingBooking = ({ item, onClose }) => {
             <View style={styles.doctorImageContainer}>
               <Image
                 style={styles.doctorImage}
-                src={doctor?.photoUrl}
+                source={{ uri: doctor?.photoUrl }}
                 resizeMode="cover"
               />
             </View>

@@ -89,10 +89,10 @@
 }
 
 .nav-link-custom.active {
-  background: #dbeafe !important;
-  color: black !important;
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(219, 234, 254, 0.4);
+  box-shadow: var(--shadow-primary);
 }
 
 .tab-content {
@@ -121,8 +121,8 @@
 }
 
 .nav-link-custom.active .tab-count {
-  background: rgba(0, 0, 0, 0.1);
-  color: black;
+  background: rgba(24, 160, 251, 0.15);
+  color: var(--color-primary);
 }
 
 /* Tab Content Wrapper */
@@ -393,8 +393,8 @@
 }
 
 .time-slot-wrapper.selected {
-  background: #dbeafe;
-  border-color: #18a0fb;
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
 }
 
 .time-slot {

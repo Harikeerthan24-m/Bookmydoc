@@ -1,24 +1,137 @@
-import { Platform } from 'react-native';
+// import { Platform } from 'react-native';
 import axios from 'axios';
-// import { APP_ENV, API_URL, API_BASE_URL } from '@env';
-import Constants from 'expo-constants';
-const { APP_ENV, API_URL, API_BASE_URL } = Constants.expoConfig.extra;
+import { APP_ENV, LOCAL_IP, API_PORT } from '@env';
 
-const AppEnv = process.env?.APP_ENV || APP_ENV;
+const AppEnv = APP_ENV || 'development';
 
-// In development, use localhost/emulator addresses
-// In production, use the environment variable from .env
-export const APP_URL =
-  AppEnv === 'development' ? `http://localhost:3000` : API_URL;
+// Dynamically construct API URLs using LOCAL_IP from .env
+// Changing LOCAL_IP (and API_PORT) in .env updates these automatically
+export const APP_URL = `http://${LOCAL_IP}:${API_PORT}`;
 
-export const BASE_URL =
-  AppEnv === 'production'
-    ? process.env?.API_BASE_URL || API_BASE_URL
-    : Platform.OS === 'ios'
-      ? 'http://localhost:8080/api' // iOS Simulator can use localhost
-      : 'http://192.168.1.6:8080/api'; // Your laptop's local IP for physical device and also always change the ip address in the .env file
+export const BASE_URL = `${APP_URL}/api`;
 
 const DEFAULT_TIMEOUT = 30_000;
+
+const ERROR_CODES = {
+  TIMEOUT: 'ERR_TIMEOUT',
+  CANCELED: 'ERR_CANCELED',
+  NETWORK: 'ERR_NETWORK',
+  CONNECTION_REFUSED: 'ECONNREFUSED',
+  CONNECTION_RESET: 'ECONNRESET',
+};
+
+/**
+ * Normalizes API errors into a consistent shape with user-friendly messages.
+ * @param {object} error - Axios or API error
+ * @returns {{ statusCode: number, message: string, error: object, data: null }}
+ */
+export function normalizeApiError(error) {
+  const serverData = error?.response?.data;
+  const statusCode =
+    serverData?.statusCode ??
+    error?.response?.status ??
+    error?.statusCode ??
+    500;
+  const serverMessage =
+    serverData?.message ?? error?.response?.statusText ?? null;
+  const code = error?.code ?? error?.error;
+
+  if (
+    serverData &&
+    typeof serverData === 'object' &&
+    (serverData.message || serverData.error)
+  ) {
+    const resolvedStatus = serverData.statusCode ?? statusCode;
+
+    // Mask auth/token errors — never expose raw JWT/token messages to the user
+    if (
+      resolvedStatus === 401 ||
+      resolvedStatus === 403 ||
+      /token|jwt|unauthorized|forbidden/i.test(serverData.message ?? '')
+    ) {
+      return {
+        statusCode: resolvedStatus,
+        message: 'Something went wrong.',
+        error: { message: 'Please try again or log in again.', code: 'AUTH_ERROR' },
+        data: null,
+      };
+    }
+
+    return {
+      statusCode: resolvedStatus,
+      message: serverData.message ?? 'Something went wrong.',
+      error:
+        typeof serverData.error === 'object'
+          ? { ...serverData.error, code: serverData.error?.code ?? code }
+          : { message: serverData.error ?? serverMessage, code },
+      data: serverData.data ?? null,
+    };
+  }
+
+  if (
+    code === 'ECONNABORTED' ||
+    code === 'ERR_TIMEOUT' ||
+    error.message?.includes('timeout')
+  ) {
+    console.warn('[API] Request timeout - server did not respond in time');
+    return {
+      statusCode: 408,
+      message: 'Request timed out.',
+      error: {
+        message:
+          'The server took too long to respond. Check your connection and that the backend is running, then try again.',
+        code: ERROR_CODES.TIMEOUT,
+      },
+      data: null,
+    };
+  }
+
+  if (code === 'ERR_CANCELED' || code === 'AbortError') {
+    console.warn('[API] Request was canceled (e.g. timeout or abort)');
+    return {
+      statusCode: 499,
+      message: 'Request was canceled.',
+      error: {
+        message:
+          'The request was canceled. If this happens during sign up or login, the server may be unreachable—check that the backend is running and the app is using the correct API URL and port.',
+        code: ERROR_CODES.CANCELED,
+      },
+      data: null,
+    };
+  }
+
+  if (
+    code === 'ERR_NETWORK' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ECONNRESET' ||
+    error.message === 'Network Error'
+  ) {
+    console.error(
+      '[API] Network error - backend may be unreachable:',
+      code || error.message,
+    );
+    return {
+      statusCode: 500,
+      message: 'Connection failed.',
+      error: {
+        message:
+          'Unable to reach the server. Check your internet connection and ensure the backend server is running.',
+        code: code ?? ERROR_CODES.NETWORK,
+      },
+      data: null,
+    };
+  }
+
+  return {
+    statusCode,
+    message: serverMessage || error?.message || 'Something went wrong.',
+    error: {
+      message: serverMessage || error?.message || 'Please try again later.',
+      code: code ?? 'UNKNOWN',
+    },
+    data: null,
+  };
+}
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -32,7 +145,6 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  // console.log(config.baseURL, config.url);
   const abortController = new AbortController();
   const timeoutId = setTimeout(() => {
     abortController.abort();
@@ -41,7 +153,6 @@ apiClient.interceptors.request.use((config) => {
     );
   }, DEFAULT_TIMEOUT);
 
-  // Store timeout ID for cleanup
   config.timeoutId = timeoutId;
   config.signal = abortController.signal;
   return config;
@@ -49,43 +160,17 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => {
-    // Clear timeout on successful response
     if (response.config?.timeoutId) {
       clearTimeout(response.config.timeoutId);
     }
     return response;
   },
   (error) => {
-    // Clear timeout on error
     if (error.config?.timeoutId) {
       clearTimeout(error.config.timeoutId);
     }
-
-    // Handle network errors specifically
-    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      console.error('[API] Network error - backend may be unreachable');
-      return Promise.reject({
-        statusCode: 500,
-        data: null,
-        error: 'Network Error',
-        message: 'Unable to connect to server. Please check your connection.',
-      });
-    }
-
-    if (error?.response?.data) {
-      return Promise.reject(error?.response?.data);
-    }
-    const statusCode =
-      error?.response?.statusCode || error.response?.status || 500;
-    const errorData = {
-      ...error?.response,
-      statusCode,
-      data: null,
-      error: error.message,
-      message: error?.response?.statusText ?? error.code,
-    };
-    // console.log('error response', errorData);
-    return Promise.reject(errorData);
+    const normalized = normalizeApiError(error);
+    return Promise.reject(normalized);
   },
 );
 

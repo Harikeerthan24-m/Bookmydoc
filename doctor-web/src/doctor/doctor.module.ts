@@ -7,5 +7,6 @@ import { DoctorController } from './doctor.controller';
   imports: [FirebaseModule],
   providers: [DoctorService],
   controllers: [DoctorController],
+  exports: [DoctorService],
 })
 export class DoctorModule {}

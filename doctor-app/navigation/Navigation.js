@@ -1,5 +1,6 @@
 import React from 'react';
 import { Linking, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import messaging from '@react-native-firebase/messaging';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -14,8 +15,8 @@ import DoctorProfile from '../screens/DoctorProfile';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import ChatScreen from '../screens/ChatScreen';
 import Payment from '../screens/PaymentScreen';
-// import DoctorAppointment from '../components/explore_components/doctorprofile_components/doctorappointmentbottom/DoctorApppointment';
 import MyProfile from '../screens/MyProfile';
+import VoiceScreen from '../screens/VoiceScreen';
 
 import Stethoscope_Selected from '../assets/icons/Stethoscope_Selected';
 import Stethoscope_Icon from '../assets/icons/Stethoscope_Icon';
@@ -42,11 +43,12 @@ function buildDeepLinkFromNotificationData(data) {
 const linking = {
   prefixes: [`${Constants.expoConfig.scheme}://`],
   config: {
-    initialRouteName: 'home',
+    initialRouteName: 'chat',
     screens: {
       Main: {
         screens: {
           Home: 'home',
+          Chat: 'chat',
           Notifications: 'notifications',
         },
       },
@@ -88,6 +90,8 @@ const linking = {
 const TabNavigator = () => {
   return (
     <Tab.Navigator
+      initialRouteName="Chat"
+      backBehavior="none"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size, focused }) => {
           let iconComponent;
@@ -117,6 +121,14 @@ const TabNavigator = () => {
             ) : (
               <Notification_Icon color={color} />
             );
+          } else if (route.name === 'Chat') {
+            iconComponent = (
+              <Ionicons
+                name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
+                size={size}
+                color={color}
+              />
+            );
           }
 
           return iconComponent;
@@ -137,7 +149,12 @@ const TabNavigator = () => {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, tabBarButton: () => null }}
+      />
+      <Tab.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{ headerShown: false, tabBarHideOnKeyboard: true }}
       />
       <Tab.Screen
         name="Explore"
@@ -168,10 +185,9 @@ const Navigation = () => {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Main" component={TabNavigator} />
         <Stack.Screen name="DoctorProfile" component={DoctorProfile} />
-        <Stack.Screen name="ChatScreen" component={ChatScreen} />
-        {/* <Stack.Screen name="DoctorAppointment" component={DoctorAppointment} /> */}
         <Stack.Screen name="Payment" component={Payment} />
         <Stack.Screen name="MyProfile" component={MyProfile} />
+        <Stack.Screen name="Voice" component={VoiceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

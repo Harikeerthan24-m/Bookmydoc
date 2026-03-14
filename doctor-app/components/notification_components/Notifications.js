@@ -9,12 +9,14 @@ import {
 } from 'react-native';
 import Constants from 'expo-constants';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import Ratings from './Ratings';
 import Reschedule from './Reschedule';
 import Loading from './../Loading';
 import BlueIcon from '../../assets/icons/calendar-blue.png';
 import OrangeIcon from '../../assets/icons/calendar-orange.png';
-import Global_Styles from '../../utils/Global_Styles';
+import Global_Styles, { headerShadow } from '../../utils/Global_Styles';
 import { notificationsSelector, useUpdateBookingMutation } from './../../store';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
 import {
@@ -28,6 +30,7 @@ import {
 import DeleteActionModal from './../ConfirmDialog';
 
 const Notifications = () => {
+  const navigation = useNavigation();
   const [updateBooking, updateBookingResult] = useUpdateBookingMutation();
   const notificationsData = useSelector(notificationsSelector);
   const [selectedRating, setSelectedRating] = useState(null);
@@ -139,8 +142,22 @@ const Notifications = () => {
             keyExtractor={(item) => item?.group_id}
           />
         ) : (
-          <View style={styles.header}>
-            <Text>Notifications is Empty</Text>
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIconWrap}>
+              <Ionicons name="notifications-off-outline" size={48} color={Global_Styles.Colors.textSecondary} />
+            </View>
+            <Text style={styles.emptyTitle}>You're all caught up!</Text>
+            <Text style={styles.emptySubtitle}>
+              No notifications yet. Stay proactive about your health — book a consultation today.
+            </Text>
+            <TouchableOpacity
+              style={styles.ctaButton}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('Main', { screen: 'Explore' })}
+            >
+              <Ionicons name="calendar-outline" size={18} color="#fff" style={styles.ctaIcon} />
+              <Text style={styles.ctaText}>Book a Consultation</Text>
+            </TouchableOpacity>
           </View>
         )}
         {selectedRating &&
@@ -182,14 +199,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: Constants.statusBarHeight,
-    paddingBottom: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: Constants.statusBarHeight + 8,
+    paddingBottom: 14,
+    paddingHorizontal: 20,
+    backgroundColor: '#ffffff',
+    ...headerShadow,
   },
   backIcon: {
     width: 24,
@@ -258,6 +274,52 @@ const styles = StyleSheet.create({
     color: '#007BFF',
     fontSize: 12,
     marginTop: 5,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 36,
+    paddingBottom: 60,
+  },
+  emptyIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: Global_Styles.Colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Global_Styles.Colors.textPrimary,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: Global_Styles.Colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 28,
+  },
+  ctaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Global_Styles.Colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: Global_Styles.Radius.xl,
+  },
+  ctaIcon: {
+    marginRight: 8,
+  },
+  ctaText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

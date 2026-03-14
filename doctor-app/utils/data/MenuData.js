@@ -24,12 +24,6 @@ export const menuData = [
     type: 'link',
   },
   {
-    id: '5',
-    icon: require('../../assets/icons/faq_icon.png'),
-    label: 'FAQs',
-    type: 'link',
-  },
-  {
     id: '6',
     icon: require('../../assets/icons/help_icon.png'),
     label: 'Help',
@@ -37,8 +31,26 @@ export const menuData = [
   },
   {
     id: '7',
+    iconName: 'shield-checkmark-outline',
+    label: 'Privacy Policy',
+    type: 'link',
+  },
+  {
+    id: '10',
+    iconName: 'document-text-outline',
+    label: 'Terms of Service',
+    type: 'link',
+  },
+  {
+    id: '8',
     iconName: 'log-out-outline',
     label: 'Logout',
+    type: 'link',
+  },
+  {
+    id: '9',
+    iconName: 'trash-outline',
+    label: 'Delete Account',
     type: 'link',
   },
 ];

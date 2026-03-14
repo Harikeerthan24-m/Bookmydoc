@@ -25,7 +25,7 @@ const DoctorInfoTop = ({ doctor }) => {
         {doctor.photoUrl ? (
           <Image
             style={styles.image}
-            src={doctor?.photoUrl}
+            source={{ uri: doctor?.photoUrl }}
             resizeMode="cover"
           />
         ) : (

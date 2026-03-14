@@ -34,14 +34,18 @@ const Dashboard = () => {
   const { data: availabilityData, isLoading: availabilityLoading } =
     useGetAvailabilitySlotsQuery({});
 
-  const bookings = bookingsData || [];
+  const bookings = [
+    ...new Map((bookingsData || []).map((b) => [b.id, b])).values(),
+  ];
   const availabilitySlots = availabilityData || [];
 
   // Calculate dashboard statistics
   const calculateStats = () => {
-    const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const todayBookings = bookings.filter((booking) => {
       const bookingDate = new Date(booking.date);
@@ -53,7 +57,8 @@ const Dashboard = () => {
     );
 
     const remainingBookings = bookings.filter(
-      (booking) => booking.status === 'confirmed',
+      (booking) =>
+        booking.status === 'confirmed' && new Date(booking.date) > new Date(),
     );
 
     return {
@@ -90,16 +95,12 @@ const Dashboard = () => {
   const formatTime = (dateString) => {
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        console.warn('Invalid date:', dateString);
-        return '';
-      }
+      if (isNaN(date.getTime())) return '';
       return date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
       });
-    } catch (err) {
-      console.error('Error formatting time:', err);
+    } catch {
       return '';
     }
   };
@@ -131,28 +132,26 @@ const Dashboard = () => {
       {/* Welcome Section */}
       <div className="welcome-section">
         <div className="welcome-content">
-          <h1>
-            Welcome back, Dr. {user?.user_name || user?.firstName || 'Doctor'}!
-          </h1>
-          <p className="welcome-subtitle">
-            Here's what's happening with your practice today
-          </p>
-        </div>
-        <div className="welcome-date">
-          <span>
+          <div className="welcome-date">
             {new Date().toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
               day: 'numeric',
             })}
-          </span>
+          </div>
+          <h1>
+            Welcome back, Dr. {user?.user_name || user?.firstName || 'Doctor'}
+          </h1>
+          <p className="welcome-subtitle">
+            Here's what's happening with your practice today
+          </p>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="stats-grid">
-        <div className="stat-card stat-card-success">
+        <div className="stat-card stat-card-primary">
           <div className="stat-icon">
             <i className="fas fa-calendar-alt"></i>
           </div>
@@ -162,7 +161,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card stat-card-primary">
+        <div className="stat-card stat-card-success">
           <div className="stat-icon">
             <i className="fas fa-calendar-check"></i>
           </div>
@@ -178,7 +177,7 @@ const Dashboard = () => {
           </div>
           <div className="stat-content">
             <h3>{stats.remainingBookings}</h3>
-            <p>Remaining</p>
+            <p>Upcoming</p>
           </div>
         </div>
         {/* 
@@ -196,7 +195,7 @@ const Dashboard = () => {
       {/* Main Content Grid */}
       <div className="dashboard-grid">
         {/* Upcoming Appointments */}
-        <div className="dashboard-card">
+        <div className="dashboard-card card-main">
           <div className="card-header">
             <h3>Upcoming Appointments</h3>
             <span className="card-count">{upcomingAppointments.length}</span>
@@ -240,7 +239,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Bookings */}
-        <div className="dashboard-card">
+        <div className="dashboard-card card-side">
           <div className="card-header">
             <h3>Recent Bookings</h3>
             <span className="card-count">{recentBookings.length}</span>

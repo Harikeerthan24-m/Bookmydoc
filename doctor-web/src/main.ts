@@ -16,13 +16,12 @@ async function bootstrap() {
 
   // Allow all origins in development, restrict in production
   app.enableCors({
-    origin: [
-      'https://bookmydoc-ldrqelklq-harikeerthan-ss-projects.vercel.app',
-      'https://*.vercel.app',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:8080',
-    ],
+    origin: process.env.NODE_ENV === 'production' 
+      ? [
+          'https://bookmydoc-ldrqelklq-harikeerthan-ss-projects.vercel.app',
+          'https://*.vercel.app',
+        ]
+      : true, // Allow all origins in development for mobile app testing
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -51,9 +50,17 @@ async function bootstrap() {
     }),
   );
 
-  // Get the local IP for development
-  const localIP = process.env.LOCAL_IP || '192.168.1.7'; // You can make this dynamic if needed
-  const port = process.env.PORT || 8080;
+  // Get the local IP and port for development from environment
+  const localIP = process.env.LOCAL_IP || 'localhost';
+  const port = process.env.PORT || '8080';
+
+  // Log what values are being used for Swagger server in dev
+  console.log('[Swagger] ENV values:', {
+    NODE_ENV: process.env.NODE_ENV,
+    LOCAL_IP: localIP,
+    PORT: port,
+    SWAGGER_SERVER: process.env.SWAGGER_SERVER,
+  });
 
   const swaggerApiServer =
     process.env.NODE_ENV === 'production'
@@ -105,7 +112,10 @@ async function bootstrap() {
     CORS_ORIGIN: process.env.NODE_ENV === 'production' ? 'restricted' : '*',
   });
 
-  // Always bind to all interfaces (0.0.0.0)
-  await app.listen(port);
+  // Always bind to all interfaces (0.0.0.0) to accept connections from network
+  const hostname = process.env.NODE_ENV === 'production' ? 'localhost' : '0.0.0.0';
+  await app.listen(port, hostname);
+  
+  console.log(`🚀 [Server] Running on http://${hostname}:${port}`);
 }
 bootstrap();

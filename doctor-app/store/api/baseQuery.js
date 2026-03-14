@@ -42,13 +42,9 @@ export const axiosBaseQuery = ({ baseUrl } = { baseUrl: '' }) => {
     } catch (errors) {
       const error = errors;
       // console.log('axiosBaseQuery', error);
-      if (error?.statusCode === 401) {
-        error.error.message = 'Something was wrong.';
-        error.message = 'Please try again.';
-        if (method?.toLocaleLowerCase() === 'get') {
-          error.error.message = '';
-          error.message = 'Please reload.';
-        }
+      if (error?.statusCode === 401 || error?.statusCode === 403) {
+        error.message = 'Something went wrong. Please try again.';
+        if (error.error) error.error.message = '';
         api.dispatch(
           refreshAuth({
             expirationTime: null,

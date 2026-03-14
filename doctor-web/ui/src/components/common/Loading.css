@@ -34,9 +34,9 @@
 }
 
 .loading-text {
-  color: #1a1a1a;
-  font-size: 0.875rem;
-  font-weight: 500;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   margin: 0;
   text-align: center;
 }

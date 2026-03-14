@@ -128,14 +128,6 @@ const TopBar = () => {
 
   const userInfo = getUserDisplayInfo();
 
-  // Debug: Log user info to see if authentication is working
-  useEffect(() => {
-    if (user) {
-      console.log('Current user:', user);
-      console.log('User UID:', user.uid);
-      console.log('User role:', user.role);
-    }
-  }, [user]);
 
   return (
     <div className="topbar">

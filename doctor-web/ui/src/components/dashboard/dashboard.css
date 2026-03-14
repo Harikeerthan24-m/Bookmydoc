@@ -1,334 +1,328 @@
+/* ============================================================
+   DASHBOARD — Vercel / Notion style
+   Flat, minimal, data-forward. No glass, no gradients, no blobs.
+   ============================================================ */
+
 .dashboard-container {
-  padding: 2rem 2rem 2rem calc(72px + 2rem);
-  background-color: #f7f8fa;
+  padding: var(--space-8) var(--space-8) var(--space-12);
   min-height: 100vh;
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family);
+  background: var(--color-bg);
 }
 
-/* Welcome Section */
+/* ── Welcome Section ── */
 .welcome-section {
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-8);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
+  gap: var(--space-4);
 }
 
-.welcome-content {
-  flex: 1;
+.welcome-date {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-2);
 }
 
 .welcome-content h1 {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.025em;
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
 }
 
 .welcome-subtitle {
   margin: 0;
-  color: #6b7280;
-  font-size: 0.875rem;
-  font-weight: 400;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
 }
 
-.welcome-date {
-  padding-top: 0.75rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-/* Stats Grid */
+/* ── Stats Grid ── */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
+  gap: 0;
+  margin-bottom: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-card);
 }
 
 .stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  border: 1px solid #e5e7eb;
+  padding: var(--space-6) var(--space-7);
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  transition: all 0.2s ease;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-card);
+  border-right: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+  position: relative;
+}
+
+.stat-card:last-child {
+  border-right: none;
 }
 
 .stat-card:hover {
-  border-color: #18a0fb;
-  box-shadow: 0 4px 12px rgba(24, 160, 251, 0.1);
+  background: var(--color-bg);
 }
 
+/* Top accent line per variant */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card-primary::before { background: var(--color-primary); }
+.stat-card-success::before { background: var(--color-success); }
+.stat-card-warning::before { background: var(--color-warning); }
+
+/* ── Stat Icon ── */
 .stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 0.75rem;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
-  background: #f7f8fa;
-  color: #18a0fb;
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
 }
 
-.stat-card-primary .stat-icon {
-  background: rgba(24, 160, 251, 0.1);
-  color: #18a0fb;
-}
+.stat-card-primary .stat-icon { color: var(--color-primary); }
+.stat-card-success .stat-icon { color: var(--color-success); }
+.stat-card-warning .stat-icon { color: var(--color-warning); }
 
-.stat-card-success .stat-icon {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-}
-
-.stat-card-warning .stat-icon {
-  background: rgba(234, 179, 8, 0.1);
-  color: #eab308;
+/* ── Stat Content ── */
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .stat-content h3 {
   margin: 0;
-  font-size: 1.875rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  letter-spacing: -0.025em;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: 1;
 }
 
 .stat-content p {
   margin: 0;
-  color: #6b7280;
-  font-size: 0.875rem;
-  font-weight: 500;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-/* Dashboard Grid */
+/* ── Dashboard Grid — 2fr 1fr ── */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  max-width: 100%;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
 }
 
-/* Dashboard Cards */
+/* ── Dashboard Cards ── */
 .dashboard-card {
-  background: white;
-  border-radius: 1rem;
-  border: 1px solid #e5e7eb;
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
   overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.dashboard-card:hover {
-  border-color: #18a0fb;
-  box-shadow: 0 4px 12px rgba(24, 160, 251, 0.1);
 }
 
 .card-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
 }
 
 .card-header h3 {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  letter-spacing: -0.025em;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-snug);
 }
 
 .card-count {
-  background: rgba(24, 160, 251, 0.1);
-  color: #18a0fb;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  background: var(--color-bg-alt);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
 }
 
 .card-content {
-  padding: 1.25rem 1.5rem;
-  max-height: 400px;
+  max-height: 480px;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #e5e7eb transparent;
 }
 
-.card-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.card-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.card-content::-webkit-scrollbar-thumb {
-  background-color: #e5e7eb;
-  border-radius: 9999px;
-}
-
-.card-content::-webkit-scrollbar-thumb:hover {
-  background-color: #d1d5db;
-}
-
-/* Appointments List */
-.appointments-list,
-.bookings-list {
+/* ── Appointment List — table-row style ── */
+.appointments-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
 }
 
-.appointment-item,
-.booking-item {
+.appointment-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
-  transition: all 0.2s ease;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-border-light);
+  transition: background var(--transition-fast);
 }
 
-.appointment-item:hover,
-.booking-item:hover {
-  border-color: #18a0fb;
-  background: rgba(24, 160, 251, 0.02);
+.appointment-item:last-child {
+  border-bottom: none;
+}
+
+.appointment-item:hover {
+  background: var(--color-bg);
 }
 
 .appointment-time {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-width: 80px;
-  text-align: center;
+  min-width: 72px;
+  flex-shrink: 0;
 }
 
 .appointment-time .time {
-  font-weight: 600;
-  color: #1a1a1a;
-  font-size: 0.875rem;
-  letter-spacing: -0.025em;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-snug);
 }
 
 .appointment-time .date {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
 }
 
-.appointment-details,
-.booking-info {
+.appointment-details {
   flex: 1;
+  min-width: 0;
 }
 
-.appointment-details h4,
+.appointment-details h4 {
+  margin: 0 0 2px 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appointment-details p {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ── Bookings List — compact side panel ── */
+.bookings-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border-light);
+  transition: background var(--transition-fast);
+}
+
+.booking-item:last-child {
+  border-bottom: none;
+}
+
+.booking-item:hover {
+  background: var(--color-bg);
+}
+
 .booking-info h4 {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  letter-spacing: -0.025em;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.appointment-details p,
 .booking-info p {
   margin: 0;
-  font-size: 0.75rem;
-  color: #6b7280;
-  line-height: 1.25rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 .booking-service {
   display: inline-flex;
   align-items: center;
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
-  color: #18a0fb;
-  background: rgba(24, 160, 251, 0.1);
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-weight: 500;
+  margin-top: var(--space-1);
+  font-size: 0.6875rem;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
 }
 
-/* Status Badges */
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: capitalize;
-  display: inline-flex;
-  align-items: center;
-}
-
-.badge-success {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-}
-
-.badge-warning {
-  background: rgba(234, 179, 8, 0.1);
-  color: #eab308;
-}
-
-.badge-info {
-  background: rgba(24, 160, 251, 0.1);
-  color: #18a0fb;
-}
-
-.badge-danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.badge-secondary {
-  background: rgba(107, 114, 128, 0.1);
-  color: #6b7280;
-}
-
-/* Empty State */
+/* ── Empty State ── */
 .empty-state {
   text-align: center;
-  padding: 3rem 2rem;
-  color: #6b7280;
+  padding: var(--space-12) var(--space-8);
+  color: var(--color-text-muted);
 }
 
 .empty-state i {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  color: #e5e7eb;
+  font-size: 1.5rem;
+  margin-bottom: var(--space-3);
+  color: var(--color-border);
+  display: block;
 }
 
 .empty-state p {
   margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: var(--font-size-sm);
 }
 
-/* Responsive Design */
+/* ── Responsive ── */
 @media (max-width: 1280px) {
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
@@ -336,77 +330,59 @@
 
 @media (max-width: 768px) {
   .dashboard-container {
-    padding: 1rem;
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .welcome-content h1 {
+    font-size: var(--font-size-xl);
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
+    border-radius: var(--radius-lg);
   }
 
-  .appointment-item,
-  .booking-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+  .stat-card {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
   }
 
-  .appointment-time {
-    min-width: auto;
-    flex-direction: row;
-    gap: 0.75rem;
+  .stat-card:last-child {
+    border-bottom: none;
   }
 
-  .doctor-info {
-    flex-direction: column;
-    text-align: center;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .doctor-details {
-    text-align: center;
-  }
-
-  .contact-item {
-    justify-content: center;
-  }
-
-  .services-list {
-    justify-content: center;
+  .appointment-item {
+    flex-wrap: wrap;
+    gap: var(--space-2);
   }
 }
 
 @media (max-width: 480px) {
   .dashboard-container {
-    padding: 0.75rem;
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .welcome-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding-bottom: var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+
+  .stat-content h3 {
+    font-size: var(--font-size-3xl);
   }
 
   .card-header {
-    padding: 1rem;
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
+    padding: var(--space-4) var(--space-4);
   }
 
-  .card-content {
-    padding: 1rem;
+  .appointment-item {
+    padding: var(--space-3) var(--space-4);
   }
 
-  .stat-card {
-    padding: 1rem;
-    flex-direction: column;
-    text-align: center;
-    gap: 0.75rem;
-  }
-
-  .stat-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-  }
-
-  .doctor-avatar {
-    min-width: 80px;
-    height: 80px;
+  .booking-item {
+    padding: var(--space-3) var(--space-4);
   }
 }

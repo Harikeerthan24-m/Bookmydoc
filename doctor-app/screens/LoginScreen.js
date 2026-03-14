@@ -9,7 +9,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { unwrapResult } from '@reduxjs/toolkit';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ContainerView from './../components/ContainerView';
 import {
   authSelector,
@@ -30,10 +30,8 @@ const LoginScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [formData, setFormData] = useState({
-    // email: 'tarekmonjur@gmail.com',
-    // password: 'tarekmonjur',
-    email: 'tarekdevelopment92@gmail.com',
-    password: 'tarekdevelopment92',
+    email: '',
+    password: '',
     role: 'customer',
   });
   const [formValidation, setFormValidation] = useState({
@@ -45,25 +43,31 @@ const LoginScreen = ({ navigation }) => {
 
   const { isAuthenticated, loading, error, providerLoading } =
     useSelector(authSelector);
+  const lastHandledErrorRef = useRef(null);
 
   useEffect(() => {
-    if (!isAuthenticated && !loading && error?.message) {
-      setFormValidation({
-        ...formValidation,
-        errors: error,
-        message: error?.message,
-        loading: false,
-      });
-      AlertNotification({
-        title: error?.message,
-        textBody: error?.error?.message,
-        variant: ALERT_DIALOG,
-        type: ALERT_DANGER,
-        button: 'Close',
-      });
-      dispatch(resetAuthError());
+    if (isAuthenticated || loading || !error?.message) {
+      if (!error?.message) lastHandledErrorRef.current = null;
+      return;
     }
-  }, [isAuthenticated, loading, error, providerLoading]);
+    if (lastHandledErrorRef.current === error.message) return;
+    lastHandledErrorRef.current = error.message;
+
+    setFormValidation((prev) => ({
+      ...prev,
+      errors: error,
+      message: error?.message,
+      loading: false,
+    }));
+    AlertNotification({
+      title: error?.message,
+      textBody: error?.error?.message,
+      variant: ALERT_DIALOG,
+      type: ALERT_DANGER,
+      button: 'Close',
+    });
+    dispatch(resetAuthError());
+  }, [isAuthenticated, loading, error, providerLoading, dispatch]);
 
   const handleGoogleSignIn = () => {
     try {

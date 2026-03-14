@@ -14,6 +14,8 @@ import {
   AppState,
 } from 'react-native';
 import Constants from 'expo-constants';
+import { headerShadow } from '../../utils/Global_Styles';
+import DefaultProfile from '../../assets/images/default_profile.png';
 import messaging from '@react-native-firebase/messaging';
 import { useDispatch, useSelector } from 'react-redux';
 import { unwrapResult } from '@reduxjs/toolkit';
@@ -27,6 +29,7 @@ import {
   profileSelector,
   updateUserProfile,
   authLogout,
+  authDeleteAccount,
 } from './../../store';
 import {
   AlertNotification,
@@ -201,6 +204,40 @@ const Menu = ({ navigation }) => {
     );
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all associated data. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await dispatch(authDeleteAccount()).unwrap();
+              AlertNotification({
+                title: 'Account Deleted',
+                textBody: 'Your account has been permanently deleted.',
+                variant: ALERT_TOAST,
+                type: ALERT_SUCCESS,
+              });
+            } catch (error) {
+              AlertNotification({
+                title: 'Delete Failed',
+                textBody:
+                  error?.message ?? 'Something went wrong. Please try again.',
+                variant: ALERT_TOAST,
+                type: ALERT_DANGER,
+              });
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
   const handleMenuPress = (label) => {
     if (label === 'Invite a friend') {
       setSelectedSheet('InviteFriend');
@@ -210,8 +247,14 @@ const Menu = ({ navigation }) => {
       setSelectedSheet('Help');
     } else if (label === 'My Profile') {
       navigation.navigate('MyProfile');
+    } else if (label === 'Privacy Policy') {
+      Linking.openURL('https://docs.google.com/document/d/e/2PACX-1vTtlOY9HWrD-CPQAQeqdG_20g67cKaXU8K6oje3ay1QzmXMgzRxjr46lBqGNJbkuQ/pub');
+    } else if (label === 'Terms of Service') {
+      Linking.openURL('https://docs.google.com/document/d/e/2PACX-1vSFNHzHXwIOe6EcoDBoBBXDt78sZjQ0dkIaXSkyL_3CtL0PUzi_QXudTDhD-YiYCA/pub');
     } else if (label === 'Logout') {
       handleLogout();
+    } else if (label === 'Delete Account') {
+      handleDeleteAccount();
     }
   };
 
@@ -234,6 +277,7 @@ const Menu = ({ navigation }) => {
           <Ionicons name="arrow-back-outline" size={22} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
+        <View style={{ width: 22 }} />
       </View>
 
       <View style={styles.profileContainer}>
@@ -244,11 +288,7 @@ const Menu = ({ navigation }) => {
             source={{ uri: profile?.photoUrl || user?.photoURL }}
           />
         ) : (
-          <Ionicons
-            style={[styles.profileImage, { borderWidth: 0, marginBottom: 0 }]}
-            name="person-circle-outline"
-            size={100}
-          />
+          <Image style={styles.profileImage} source={DefaultProfile} />
         )}
         <Text style={styles.profileName}>
           {profile?.display_name || user?.displayName}
@@ -295,14 +335,14 @@ const MenuItem = ({
         <Ionicons
           name={iconName}
           size={22}
-          color={label === 'Logout' ? '#e74c3c' : '#333'}
+          color={label === 'Logout' || label === 'Delete Account' ? '#e74c3c' : '#333'}
         />
       </View>
     ) : (
       <Image source={icon} style={styles.icon} />
     )}
     <Text
-      style={[styles.menuLabel, label === 'Logout' && styles.menuLabelLogout]}
+      style={[styles.menuLabel, (label === 'Logout' || label === 'Delete Account') && styles.menuLabelLogout]}
     >
       {label}
     </Text>
@@ -328,12 +368,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Constants.statusBarHeight,
+    paddingTop: Constants.statusBarHeight + 8,
     paddingBottom: 100,
     paddingHorizontal: 20,
     backgroundColor: '#009EFF',
     borderBottomEndRadius: 40,
     borderBottomLeftRadius: 40,
+    ...headerShadow,
   },
   backIcon: {
     width: 24,
@@ -341,12 +382,11 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   headerTitle: {
+    flex: 1,
     fontSize: 20,
     fontWeight: '500',
     color: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: '35%',
+    textAlign: 'center',
   },
   profileContainer: {
     alignItems: 'center',
