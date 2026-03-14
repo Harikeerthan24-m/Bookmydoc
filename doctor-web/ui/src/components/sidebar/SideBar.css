@@ -17,7 +17,9 @@
   z-index: 200;
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: width var(--transition-slow), box-shadow var(--transition-slow);
+  transition:
+    width var(--transition-slow),
+    box-shadow var(--transition-slow);
   will-change: width;
 }
 
@@ -61,7 +63,9 @@
   gap: 1px;
   opacity: 0;
   transform: translateX(-6px);
-  transition: opacity var(--transition-base), transform var(--transition-base);
+  transition:
+    opacity var(--transition-base),
+    transform var(--transition-base);
   overflow: hidden;
   white-space: nowrap;
 }
@@ -108,7 +112,9 @@
   overflow: hidden;
   opacity: 0;
   height: 0;
-  transition: opacity var(--transition-base), height var(--transition-base);
+  transition:
+    opacity var(--transition-base),
+    height var(--transition-base);
 }
 
 .sidebar:hover .nav-section-title {
@@ -188,7 +194,9 @@
 .nav-item span {
   opacity: 0;
   transform: translateX(-4px);
-  transition: opacity var(--transition-base), transform var(--transition-base);
+  transition:
+    opacity var(--transition-base),
+    transform var(--transition-base);
   white-space: nowrap;
 }
 
@@ -288,7 +296,9 @@
   height: 1.5px;
   background: var(--color-text-muted);
   border-radius: 2px;
-  transition: transform 0.22s ease, opacity 0.22s ease;
+  transition:
+    transform 0.22s ease,
+    opacity 0.22s ease;
 }
 
 .hamburger {
@@ -332,8 +342,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ── Responsive: Mobile ── */
@@ -341,7 +355,9 @@
   .sidebar {
     width: var(--sidebar-width);
     transform: translateX(-100%);
-    transition: transform var(--transition-slow), box-shadow var(--transition-slow);
+    transition:
+      transform var(--transition-slow),
+      box-shadow var(--transition-slow);
     /* Override hover expansion on mobile */
   }
 

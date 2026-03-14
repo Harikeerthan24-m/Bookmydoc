@@ -191,31 +191,31 @@
   .notifications-page {
     padding: 12px;
   }
-  
+
   .notifications-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .notifications-tabs {
     flex-direction: column;
   }
-  
+
   .notification-item {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .notification-header {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }
-  
+
   .action-buttons .btn {
     width: 100%;
   }

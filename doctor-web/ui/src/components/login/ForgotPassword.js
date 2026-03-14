@@ -27,9 +27,7 @@ const ForgotPassword = () => {
 
     try {
       setLoading(true);
-      const response = await dispatch(
-        sendPasswordResetEmailRequest({ email }),
-      );
+      const response = await dispatch(sendPasswordResetEmailRequest({ email }));
       unwrapResult(response);
       setStep(2);
     } catch (err) {
@@ -60,7 +58,10 @@ const ForgotPassword = () => {
                     <h3 className="card-title text-center mb-1">
                       Forgot Password
                     </h3>
-                    <p className="text-center text-muted mb-4" style={{ fontSize: '0.9rem' }}>
+                    <p
+                      className="text-center text-muted mb-4"
+                      style={{ fontSize: '0.9rem' }}
+                    >
                       Enter your email and we'll send you a reset link.
                     </p>
                     <form onSubmit={handleSubmit}>
@@ -116,7 +117,10 @@ const ForgotPassword = () => {
                       <strong>{email}</strong>. Click the link in the email to
                       reset your password.
                     </p>
-                    <p className="text-muted mb-4" style={{ fontSize: '0.85rem' }}>
+                    <p
+                      className="text-muted mb-4"
+                      style={{ fontSize: '0.85rem' }}
+                    >
                       Didn't receive it? Check your spam folder or{' '}
                       <button
                         className="btn btn-link p-0"

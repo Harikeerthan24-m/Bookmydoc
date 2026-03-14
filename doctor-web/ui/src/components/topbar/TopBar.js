@@ -128,7 +128,6 @@ const TopBar = () => {
 
   const userInfo = getUserDisplayInfo();
 
-
   return (
     <div className="topbar">
       {/* Left Section - Current Page */}
