@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -19,9 +21,9 @@ import {
 import { RolesGuard } from '@app/auth/guard/roles.guard';
 import { Roles } from '@app/auth/decorators/roles.decorator';
 import { IRole } from '@app/common/types/type';
-import { AiService, IClassificationResult } from './ai.service';
-import { ClassifySymptomsDto } from './dto/classify-symptoms.dto';
+import { AiService } from './ai.service';
 import { ChatRequestDto, ChatResponseDto } from './dto/chat.dto';
+import { TtsDto } from './dto/tts.dto';
 
 @Controller('ai')
 @ApiBearerAuth()
@@ -30,23 +32,43 @@ import { ChatRequestDto, ChatResponseDto } from './dto/chat.dto';
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
-  @Post('classify-symptoms')
+  @Get('chat/history')
   @Roles(IRole.CUSTOMER, IRole.ADMIN)
   @ApiOperation({
-    summary: 'Classify symptoms and get specialist recommendations',
+    summary:
+      'Get current user’s chat history (paginated). Most recent first; use `before` to load older messages.',
   })
-  @ApiResponse({ status: 200, description: 'Classification successful' })
-  @ApiResponse({ status: 400, description: 'Invalid input' })
-  async classifySymptoms(@Body() dto: ClassifySymptomsDto): Promise<{
+  @ApiResponse({ status: 200, description: 'Chat history retrieved' })
+  async getChatHistory(
+    @Req() req: any,
+    @Query('limit') limit?: string,
+    @Query('before') before?: string,
+  ): Promise<{
     statusCode: number;
-    data: IClassificationResult;
+    data: {
+      session: Record<string, any>;
+      conversationHistory: Array<{ role: string; content: string }>;
+      messages: Array<{
+        id: string;
+        role: string;
+        content: string;
+        doctors?: any[];
+      }>;
+      nextCursor: string | null;
+    };
     message: string;
   }> {
-    const result = await this.aiService.classifySymptoms(dto);
+    const userId = req?.user?.uid || req?.user?.userId;
+    const limitNum = limit ? Math.min(parseInt(limit, 10) || 25, 50) : 25;
+    const result = await this.aiService.getChatHistory(
+      userId,
+      limitNum,
+      before?.trim() || undefined,
+    );
     return {
       statusCode: 200,
       data: result,
-      message: 'Classification successful',
+      message: 'Chat history retrieved successfully',
     };
   }
 
@@ -103,6 +125,31 @@ export class AiController {
       statusCode: 200,
       data: result,
       message: 'Chat response generated successfully',
+    };
+  }
+
+  @Post('tts')
+  @Roles(IRole.CUSTOMER, IRole.ADMIN)
+  @ApiOperation({
+    summary: 'Convert assistant text to speech (TTS)',
+    description:
+      'Generates spoken audio for a given assistant response text. Returns base64-encoded audio that the client can play.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'TTS successful',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  async tts(@Body() dto: TtsDto): Promise<{
+    statusCode: number;
+    data: { audioBase64: string; mimeType: string };
+    message: string;
+  }> {
+    const result = await this.aiService.synthesizeSpeech(dto.text);
+    return {
+      statusCode: 200,
+      data: result,
+      message: 'Text-to-speech successful',
     };
   }
 }

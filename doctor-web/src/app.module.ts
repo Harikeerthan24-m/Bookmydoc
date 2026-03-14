@@ -28,7 +28,6 @@ import { ServiceModule } from './service/service.module';
 import { DoctorModule } from './doctor/doctor.module';
 import { NotificationModule } from './notification/notification.module';
 import { AiModule } from './ai/ai.module';
-import { VoiceModule } from './voice/voice.module';
 
 @Module({
   imports: [
@@ -47,7 +46,6 @@ import { VoiceModule } from './voice/voice.module';
     DoctorModule,
     NotificationModule,
     AiModule,
-    VoiceModule,
   ],
   controllers: [AppController],
   providers: [

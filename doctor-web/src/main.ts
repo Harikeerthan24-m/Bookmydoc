@@ -51,9 +51,17 @@ async function bootstrap() {
     }),
   );
 
-  // Get the local IP for development
-  const localIP = process.env.LOCAL_IP || '192.168.1.7'; // You can make this dynamic if needed
-  const port = process.env.PORT || 8080;
+  // Get the local IP and port for development from environment
+  const localIP = process.env.LOCAL_IP || 'localhost';
+  const port = process.env.PORT || '8080';
+
+  // Log what values are being used for Swagger server in dev
+  console.log('[Swagger] ENV values:', {
+    NODE_ENV: process.env.NODE_ENV,
+    LOCAL_IP: localIP,
+    PORT: port,
+    SWAGGER_SERVER: process.env.SWAGGER_SERVER,
+  });
 
   const swaggerApiServer =
     process.env.NODE_ENV === 'production'

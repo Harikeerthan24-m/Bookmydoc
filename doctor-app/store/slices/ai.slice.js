@@ -7,7 +7,7 @@ export const AISlice = createApi({
   baseQuery: axiosBaseQuery({
     baseUrl: '',
   }),
-  tagTypes: ['AIClassification'],
+  tagTypes: ['AIClassification', 'ChatHistory'],
   endpoints(build) {
     return {
       classifySymptoms: build.mutation({
@@ -61,6 +61,16 @@ export const AISlice = createApi({
         },
       }),
 
+      getChatHistory: build.query({
+        query: ({ limit = 25, before } = {}) => ({
+          url: '/ai/chat/history',
+          method: 'GET',
+          params: { limit, ...(before && { before }) },
+        }),
+        transformResponse: (response) => response?.data,
+        providesTags: ['ChatHistory'],
+      }),
+
       chat: build.mutation({
         query: (data) => ({
           url: `/ai/chat`,
@@ -79,6 +89,33 @@ export const AISlice = createApi({
           // Don't show toast for chat errors, handle in component
           return response;
         },
+        invalidatesTags: ['ChatHistory'],
+      }),
+
+      tts: build.mutation({
+        query: (data) => ({
+          url: `/ai/tts`,
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          data,
+        }),
+        transformResponse: async (response) => {
+          return response?.data;
+        },
+        transformErrorResponse: (response) => {
+          const error = response?.error;
+          AlertNotification({
+            title: response.message || 'Voice Playback Failed',
+            textBody:
+              error?.message || error || 'Unable to generate assistant audio',
+            variant: 'toast',
+            type: 'danger',
+          });
+          return response;
+        },
       }),
     };
   },
@@ -87,5 +124,8 @@ export const AISlice = createApi({
 export const {
   useClassifySymptomsMutation,
   useTranscribeAudioMutation,
+  useGetChatHistoryQuery,
+  useLazyGetChatHistoryQuery,
   useChatMutation,
+  useTtsMutation,
 } = AISlice;

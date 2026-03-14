@@ -1,15 +1,30 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   TouchableOpacity,
   useWindowDimensions,
   Animated,
+  Platform,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-import { useGetRealtimeTokenMutation } from '../store/slices/voice.slice';
+import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
+import {
+  useTranscribeAudioMutation,
+  useTtsMutation,
+  useChatMutation,
+} from '../store/slices/ai.slice';
 
 const VOICE_STATES = {
   IDLE: 'IDLE',
@@ -20,33 +35,38 @@ const VOICE_STATES = {
 
 const VoiceScreen = () => {
   const navigation = useNavigation();
+  const user = useSelector((state) => state.authSlice?.user);
+  const profile = useSelector((state) => state.authSlice?.profile);
+  const userName =
+    profile?.display_name || user?.displayName || user?.display_name || '';
   const { width } = useWindowDimensions();
-  // Slightly smaller base size so the orb doesn't grow too large when animated
   const circleSize = Math.min(width * 0.6, 260);
 
-  // Orb state
   const [voiceState, setVoiceState] = useState(VOICE_STATES.IDLE);
-  // Voice Assistant
-  const [
-    getRealtimeToken,
-    { data: realtimeToken, isLoading: isGettingRealtimeToken },
-  ] = useGetRealtimeTokenMutation();
-  // Animated values
+  const [isRecording, setIsRecording] = useState(false);
+  const [error, setError] = useState(null);
+  const recordingRef = useRef(null);
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const [pendingDoctorCount, setPendingDoctorCount] = useState(0);
+
+  const [transcribeAudio] = useTranscribeAudioMutation();
+  const [chatMutation] = useChatMutation();
+  const [tts] = useTtsMutation();
+
   const scale = useRef(new Animated.Value(1)).current;
   const rotate = useRef(new Animated.Value(0)).current;
-  // Helper to stop any running animations
+
   const stopAnimations = () => {
     scale.stopAnimation();
     rotate.stopAnimation();
   };
-  // Start animations based on current voiceState
+
   useEffect(() => {
     stopAnimations();
-    // Reset base values
     scale.setValue(1);
     rotate.setValue(0);
+
     if (voiceState === VOICE_STATES.IDLE) {
-      // Slow breathing pulse
       Animated.loop(
         Animated.sequence([
           Animated.timing(scale, {
@@ -62,7 +82,6 @@ const VoiceScreen = () => {
         ]),
       ).start();
     } else if (voiceState === VOICE_STATES.LISTENING) {
-      // Stronger, faster pulse (pretend it's driven by mic amplitude)
       Animated.loop(
         Animated.sequence([
           Animated.timing(scale, {
@@ -78,7 +97,6 @@ const VoiceScreen = () => {
         ]),
       ).start();
     } else if (voiceState === VOICE_STATES.PROCESSING) {
-      // Subtle pulse + slow rotation
       Animated.loop(
         Animated.sequence([
           Animated.timing(scale, {
@@ -101,7 +119,6 @@ const VoiceScreen = () => {
         }),
       ).start();
     } else if (voiceState === VOICE_STATES.SPEAKING) {
-      // Talking-like pulse + medium rotation
       Animated.loop(
         Animated.sequence([
           Animated.timing(scale, {
@@ -125,10 +142,9 @@ const VoiceScreen = () => {
       ).start();
     }
 
-    // Cleanup when state changes/unmounts
     return stopAnimations;
   }, [voiceState, scale, rotate]);
-  // Interpolate rotation value (0 → 1 → 0..360deg)
+
   const rotateInterpolate = useMemo(
     () =>
       rotate.interpolate({
@@ -146,25 +162,145 @@ const VoiceScreen = () => {
   const micIconName = isMicListening ? 'mic' : 'mic-off';
   const micIconColor = isMicListening ? '#000000' : '#ff3b30';
 
-  // TEMP: cycle through states when you tap mic (for testing)
-  const handleMicPress = async () => {
+  const startRecording = useCallback(async () => {
     try {
-      const res = await getRealtimeToken().unwrap(); // res = { token, session }
-      console.log('Realtime token:', res.token);
-    } catch (e) {
-      console.log('Realtime token error:', e);
+      const permission = await Audio.requestPermissionsAsync();
+      if (!permission.granted) {
+        setError('Microphone permission is required for voice input');
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
+      );
+
+      recordingRef.current = recording;
+      setIsRecording(true);
+      setVoiceState(VOICE_STATES.LISTENING);
+    } catch (err) {
+      console.error('[Voice] Failed to start recording:', err);
+      setError('Failed to start recording');
+      setIsRecording(false);
+      setVoiceState(VOICE_STATES.IDLE);
     }
-    // setVoiceState((prev) => {
-    //   if (prev === VOICE_STATES.IDLE) return VOICE_STATES.LISTENING;
-    //   if (prev === VOICE_STATES.LISTENING) return VOICE_STATES.PROCESSING;
-    //   if (prev === VOICE_STATES.PROCESSING) return VOICE_STATES.SPEAKING;
-    //   return VOICE_STATES.IDLE;
-    // });
+  }, []);
+
+  const stopRecordingAndProcess = useCallback(async () => {
+    try {
+      if (!recordingRef.current) {
+        setIsRecording(false);
+        setVoiceState(VOICE_STATES.IDLE);
+        return;
+      }
+
+      await recordingRef.current.stopAndUnloadAsync();
+      const uri = recordingRef.current.getURI();
+      recordingRef.current = null;
+
+      setIsRecording(false);
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+
+      if (!uri) {
+        setError('No audio recorded');
+        setVoiceState(VOICE_STATES.IDLE);
+        return;
+      }
+
+      setVoiceState(VOICE_STATES.PROCESSING);
+
+      const formData = new FormData();
+      formData.append('audio', {
+        uri,
+        type: Platform.OS === 'ios' ? 'audio/m4a' : 'audio/m4a',
+        name: 'recording.m4a',
+      });
+
+      const transcribeResponse = await transcribeAudio(formData).unwrap();
+      const transcribedText =
+        transcribeResponse?.text || transcribeResponse?.data?.text;
+
+      if (!transcribedText) {
+        setError('Could not understand the audio. Please try again.');
+        setVoiceState(VOICE_STATES.IDLE);
+        return;
+      }
+
+      const updatedHistory = [
+        ...conversationHistory,
+        { role: 'user', content: transcribedText },
+      ];
+
+      const chatResponse = await chatMutation({
+        message: transcribedText,
+        conversationHistory:
+          conversationHistory.length > 0 ? conversationHistory : undefined,
+        userName: userName || undefined,
+        inputType: 'voice',
+      }).unwrap();
+
+      const assistantText = chatResponse?.response;
+      setConversationHistory(
+        chatResponse?.conversationHistory || updatedHistory,
+      );
+      const doctorCount = chatResponse?.doctorRecommendations?.length ?? 0;
+      if (doctorCount > 0) setPendingDoctorCount(doctorCount);
+
+      if (!assistantText) {
+        setError('Assistant did not return a response.');
+        setVoiceState(VOICE_STATES.IDLE);
+        return;
+      }
+
+      const ttsResult = await tts({ text: assistantText }).unwrap();
+      if (ttsResult?.audioBase64) {
+        const fileUri = `${FileSystem.cacheDirectory}voice-assistant-${Date.now()}.mp3`;
+        await FileSystem.writeAsStringAsync(fileUri, ttsResult.audioBase64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        setVoiceState(VOICE_STATES.SPEAKING);
+
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: fileUri },
+          { shouldPlay: true },
+        );
+
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (!status.isLoaded) return;
+          if (status.didJustFinish) {
+            sound.unloadAsync();
+            setVoiceState(VOICE_STATES.IDLE);
+          }
+        });
+      } else {
+        setVoiceState(VOICE_STATES.IDLE);
+      }
+    } catch (err) {
+      console.error('[Voice] Error during voice pipeline:', err);
+      setError(
+        typeof err === 'string'
+          ? err
+          : err?.message || 'Voice assistant failed. Please try again.',
+      );
+      setVoiceState(VOICE_STATES.IDLE);
+    }
+  }, [chatMutation, conversationHistory, transcribeAudio, tts, userName]);
+
+  const handleMicPress = async () => {
+    if (!isRecording && voiceState !== VOICE_STATES.SPEAKING) {
+      await startRecording();
+    } else if (isRecording && voiceState === VOICE_STATES.LISTENING) {
+      await stopRecordingAndProcess();
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Central gradient circle (cloudy sky / ethereal effect) */}
       <View style={styles.circleWrapper}>
         <Animated.View
           style={{
@@ -190,7 +326,22 @@ const VoiceScreen = () => {
         </Animated.View>
       </View>
 
-      {/* Bottom control buttons */}
+      {pendingDoctorCount > 0 && (
+        <TouchableOpacity
+          style={styles.resultsNudge}
+          activeOpacity={0.85}
+          onPress={() => {
+            setPendingDoctorCount(0);
+            navigation.navigate('Chat');
+          }}
+        >
+          <Ionicons name="chatbubbles" size={20} color="#fff" />
+          <Text style={styles.resultsNudgeText}>
+            I found {pendingDoctorCount} doctor{pendingDoctorCount !== 1 ? 's' : ''} for you. Tap to see them in Chat →
+          </Text>
+        </TouchableOpacity>
+      )}
+
       <View style={styles.bottomRow}>
         <TouchableOpacity
           style={micButtonStyle}
@@ -222,6 +373,29 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  resultsNudge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: '#2e7dd6',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    marginBottom: 16,
+    gap: 8,
+    maxWidth: '90%',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  resultsNudgeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
   },
   bottomRow: {
     flexDirection: 'row',
