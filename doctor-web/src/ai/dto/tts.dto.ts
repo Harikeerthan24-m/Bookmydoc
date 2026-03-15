@@ -12,4 +12,3 @@ export class TtsDto {
   @MinLength(1)
   text: string;
 }
-

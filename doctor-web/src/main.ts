@@ -16,12 +16,13 @@ async function bootstrap() {
 
   // Allow all origins in development, restrict in production
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? [
-          'https://bookmydoc-ldrqelklq-harikeerthan-ss-projects.vercel.app',
-          'https://*.vercel.app',
-        ]
-      : true, // Allow all origins in development for mobile app testing
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? [
+            'https://bookmydoc-ldrqelklq-harikeerthan-ss-projects.vercel.app',
+            'https://*.vercel.app',
+          ]
+        : true, // Allow all origins in development for mobile app testing
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -113,9 +114,10 @@ async function bootstrap() {
   });
 
   // Always bind to all interfaces (0.0.0.0) to accept connections from network
-  const hostname = process.env.NODE_ENV === 'production' ? 'localhost' : '0.0.0.0';
+  const hostname =
+    process.env.NODE_ENV === 'production' ? 'localhost' : '0.0.0.0';
   await app.listen(port, hostname);
-  
+
   console.log(`🚀 [Server] Running on http://${hostname}:${port}`);
 }
 bootstrap();
