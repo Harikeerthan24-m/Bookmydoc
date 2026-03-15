@@ -310,16 +310,21 @@ const Availability = () => {
 
                   <div className="av-day-info">
                     <span className="av-day-name">{day.day}</span>
-                    <span className="av-day-abbr">{day.day.slice(0, 3).toUpperCase()}</span>
+                    <span className="av-day-abbr">
+                      {day.day.slice(0, 3).toUpperCase()}
+                    </span>
                   </div>
 
                   <div className="av-day-status">
                     {day.enabled ? (
                       <span className="av-status-badge active">
-                        {day.timeSlots.length} slot{day.timeSlots.length !== 1 ? 's' : ''}
+                        {day.timeSlots.length} slot
+                        {day.timeSlots.length !== 1 ? 's' : ''}
                       </span>
                     ) : (
-                      <span className="av-status-badge inactive">Unavailable</span>
+                      <span className="av-status-badge inactive">
+                        Unavailable
+                      </span>
                     )}
                   </div>
                 </div>

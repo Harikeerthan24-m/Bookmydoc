@@ -7,37 +7,100 @@ import './Service.css';
 const ClockIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-    <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path
+      d="M12 7v5l3 3"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
   </svg>
 );
 
 const EditIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 const TrashIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-    <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <polyline
+      points="3 6 5 6 21 6"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M10 11v6M14 11v6"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <path
+      d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 const PlusIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    <path
+      d="M12 5v14M5 12h14"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+    />
   </svg>
 );
 
 const EmptyIcon = () => (
   <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
-    <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M9 9h6M9 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <rect
+      x="2"
+      y="3"
+      width="20"
+      height="14"
+      rx="2"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
+    <path
+      d="M8 21h8M12 17v4"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <path
+      d="M9 9h6M9 12h4"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
   </svg>
 );
 
@@ -55,7 +118,9 @@ const emptyForm = { name: '', duration: '', price: '', description: '' };
 const ConsultationForm = ({ values, onChange }) => (
   <div className="svc-form">
     <div className="svc-form-group">
-      <label>Service Name <span className="svc-required">*</span></label>
+      <label>
+        Service Name <span className="svc-required">*</span>
+      </label>
       <input
         type="text"
         placeholder="e.g., Quick Consultation"
@@ -65,31 +130,41 @@ const ConsultationForm = ({ values, onChange }) => (
     </div>
     <div className="svc-form-row">
       <div className="svc-form-group">
-        <label>Duration <span className="svc-required">*</span></label>
+        <label>
+          Duration <span className="svc-required">*</span>
+        </label>
         <select
           value={values.duration}
           onChange={(e) => onChange('duration', e.target.value)}
         >
           <option value="">Select duration</option>
           {timingOptions.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
           ))}
         </select>
       </div>
       <div className="svc-form-group">
-        <label>Price (₹) <span className="svc-required">*</span></label>
+        <label>
+          Price (₹) <span className="svc-required">*</span>
+        </label>
         <input
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
           placeholder="e.g., 500"
           value={values.price}
-          onChange={(e) => onChange('price', e.target.value.replace(/[^0-9]/g, ''))}
+          onChange={(e) =>
+            onChange('price', e.target.value.replace(/[^0-9]/g, ''))
+          }
         />
       </div>
     </div>
     <div className="svc-form-group">
-      <label>Description <span className="svc-optional">(optional)</span></label>
+      <label>
+        Description <span className="svc-optional">(optional)</span>
+      </label>
       <textarea
         placeholder="Brief description of this consultation type"
         value={values.description}
@@ -109,14 +184,19 @@ const Service = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
-  const { consultations, addConsultation, removeConsultation, updateConsultation } =
-    useConsultations();
+  const {
+    consultations,
+    addConsultation,
+    removeConsultation,
+    updateConsultation,
+  } = useConsultations();
 
   const handleInputChange = (field, value) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
   };
 
-  const isFormValid = formValues.name && formValues.duration && formValues.price;
+  const isFormValid =
+    formValues.name && formValues.duration && formValues.price;
 
   const handleSave = async () => {
     if (!isFormValid) return toast.error('Please fill in all required fields');
@@ -188,8 +268,7 @@ const Service = () => {
     }
   };
 
-  const isBusy = (id) =>
-    isLoading || deletingId === id || updatingId === id;
+  const isBusy = (id) => isLoading || deletingId === id || updatingId === id;
 
   return (
     <div className="svc-page">
@@ -206,7 +285,10 @@ const Service = () => {
         </div>
         <button
           className="svc-new-btn"
-          onClick={() => { setFormValues(emptyForm); setShowCreateForm(true); }}
+          onClick={() => {
+            setFormValues(emptyForm);
+            setShowCreateForm(true);
+          }}
           disabled={isLoading}
         >
           <PlusIcon />
@@ -221,10 +303,15 @@ const Service = () => {
             <EmptyIcon />
           </div>
           <h3>No services yet</h3>
-          <p>Create your first consultation type so patients can start booking.</p>
+          <p>
+            Create your first consultation type so patients can start booking.
+          </p>
           <button
             className="svc-new-btn"
-            onClick={() => { setFormValues(emptyForm); setShowCreateForm(true); }}
+            onClick={() => {
+              setFormValues(emptyForm);
+              setShowCreateForm(true);
+            }}
           >
             <PlusIcon />
             Create First Service
@@ -268,7 +355,10 @@ const Service = () => {
                   {deletingId === service.id ? (
                     <Loading type="inline" size="small" text="Deleting…" />
                   ) : (
-                    <><TrashIcon />Delete</>
+                    <>
+                      <TrashIcon />
+                      Delete
+                    </>
                   )}
                 </button>
               </div>
@@ -278,10 +368,15 @@ const Service = () => {
           {/* Add new — ghost card */}
           <button
             className="svc-card svc-card-ghost"
-            onClick={() => { setFormValues(emptyForm); setShowCreateForm(true); }}
+            onClick={() => {
+              setFormValues(emptyForm);
+              setShowCreateForm(true);
+            }}
           >
             <div className="svc-ghost-inner">
-              <span className="svc-ghost-plus"><PlusIcon /></span>
+              <span className="svc-ghost-plus">
+                <PlusIcon />
+              </span>
               <span>Add Service</span>
             </div>
           </button>
@@ -290,24 +385,41 @@ const Service = () => {
 
       {/* ── Create Modal ── */}
       {showCreateForm && (
-        <div className="svc-modal-overlay" onClick={() => setShowCreateForm(false)}>
+        <div
+          className="svc-modal-overlay"
+          onClick={() => setShowCreateForm(false)}
+        >
           <div className="svc-modal" onClick={(e) => e.stopPropagation()}>
             <div className="svc-modal-header">
               <div>
                 <h3>New Consultation Service</h3>
                 <p>Fill in the details for your new service</p>
               </div>
-              <button className="svc-modal-close" onClick={() => setShowCreateForm(false)}>
+              <button
+                className="svc-modal-close"
+                onClick={() => setShowCreateForm(false)}
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path
+                    d="M18 6L6 18M6 6l12 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </button>
             </div>
             <div className="svc-modal-body">
-              <ConsultationForm values={formValues} onChange={handleInputChange} />
+              <ConsultationForm
+                values={formValues}
+                onChange={handleInputChange}
+              />
             </div>
             <div className="svc-modal-footer">
-              <button className="svc-cancel-btn" onClick={() => setShowCreateForm(false)}>
+              <button
+                className="svc-cancel-btn"
+                onClick={() => setShowCreateForm(false)}
+              >
                 Cancel
               </button>
               <button
@@ -337,12 +449,20 @@ const Service = () => {
               </div>
               <button className="svc-modal-close" onClick={handleCancelEdit}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path
+                    d="M18 6L6 18M6 6l12 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </button>
             </div>
             <div className="svc-modal-body">
-              <ConsultationForm values={formValues} onChange={handleInputChange} />
+              <ConsultationForm
+                values={formValues}
+                onChange={handleInputChange}
+              />
             </div>
             <div className="svc-modal-footer">
               <button className="svc-cancel-btn" onClick={handleCancelEdit}>

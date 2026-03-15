@@ -64,17 +64,38 @@ const Signup = () => {
           'A server error occurred. Please try again later or contact support if the problem persists.';
       }
 
-      ToastErrorMessage({ title: errorTitle, message: errorMessage, duration: 6000 });
+      ToastErrorMessage({
+        title: errorTitle,
+        message: errorMessage,
+        duration: 6000,
+      });
     }
 
-    if (isAuthenticated && !isVerifyNeeded && (!loading || !providerLoading) && !error) {
+    if (
+      isAuthenticated &&
+      !isVerifyNeeded &&
+      (!loading || !providerLoading) &&
+      !error
+    ) {
       navigate('/profile', { replace: true });
     }
 
-    if (isAuthenticated && isVerifyNeeded && (!loading || !providerLoading) && !error) {
+    if (
+      isAuthenticated &&
+      isVerifyNeeded &&
+      (!loading || !providerLoading) &&
+      !error
+    ) {
       navigate('/verify', { replace: true });
     }
-  }, [isAuthenticated, loading, error, navigate, providerLoading, isVerifyNeeded]);
+  }, [
+    isAuthenticated,
+    loading,
+    error,
+    navigate,
+    providerLoading,
+    isVerifyNeeded,
+  ]);
 
   const handleChange = (field, event) => {
     setUser({ ...user, [field]: event.target.value });
@@ -89,9 +110,18 @@ const Signup = () => {
   const handleValidation = () => {
     const errors = {};
     let valid = true;
-    if (!user.name.trim())     { errors.name     = 'Name is required';     valid = false; }
-    if (!user.email.trim())    { errors.email    = 'Email is required';    valid = false; }
-    if (!user.password.trim()) { errors.password = 'Password is required'; valid = false; }
+    if (!user.name.trim()) {
+      errors.name = 'Name is required';
+      valid = false;
+    }
+    if (!user.email.trim()) {
+      errors.email = 'Email is required';
+      valid = false;
+    }
+    if (!user.password.trim()) {
+      errors.password = 'Password is required';
+      valid = false;
+    }
     return { valid, errors };
   };
 
@@ -102,7 +132,12 @@ const Signup = () => {
       setFormValidation({ ...formValidation, errors, loading: false, valid });
       return;
     }
-    setFormValidation({ ...formValidation, errors: {}, message: '', loading: true });
+    setFormValidation({
+      ...formValidation,
+      errors: {},
+      message: '',
+      loading: true,
+    });
     dispatch(authRegister({ ...user, role }));
   };
 
@@ -111,7 +146,10 @@ const Signup = () => {
     try {
       dispatch(authGoogleSignIn({ role }));
     } catch (error) {
-      ToastErrorMessage({ title: error?.message, message: error?.error?.message });
+      ToastErrorMessage({
+        title: error?.message,
+        message: error?.error?.message,
+      });
     }
   };
 
@@ -145,7 +183,9 @@ const Signup = () => {
                     onChange={(e) => handleChange('name', e)}
                   />
                   {formValidation.errors.name && (
-                    <small className="text-danger">{formValidation.errors.name}</small>
+                    <small className="text-danger">
+                      {formValidation.errors.name}
+                    </small>
                   )}
                 </div>
 
@@ -160,7 +200,9 @@ const Signup = () => {
                     onChange={(e) => handleChange('email', e)}
                   />
                   {formValidation.errors.email && (
-                    <small className="text-danger">{formValidation.errors.email}</small>
+                    <small className="text-danger">
+                      {formValidation.errors.email}
+                    </small>
                   )}
                 </div>
 
@@ -182,24 +224,80 @@ const Signup = () => {
                       tabIndex={-1}
                     >
                       {showPassword ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <line
+                            x1="1"
+                            y1="1"
+                            x2="23"
+                            y2="23"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
                       ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/></svg>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="3"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          />
+                        </svg>
                       )}
                     </button>
                   </div>
                   {formValidation.errors.password && (
-                    <small className="text-danger">{formValidation.errors.password}</small>
+                    <small className="text-danger">
+                      {formValidation.errors.password}
+                    </small>
                   )}
                   {!formValidation.errors.password && user.password && (
-                    <small className={user.password.length >= 6 ? 'text-success' : 'text-warning'}>
-                      {user.password.length >= 6 ? 'Strong password' : 'Too weak — min 6 characters'}
+                    <small
+                      className={
+                        user.password.length >= 6
+                          ? 'text-success'
+                          : 'text-warning'
+                      }
+                    >
+                      {user.password.length >= 6
+                        ? 'Strong password'
+                        : 'Too weak — min 6 characters'}
                     </small>
                   )}
                 </div>
 
                 {!loading ? (
-                  <button type="submit" className="custom-btn-block" disabled={loading}>
+                  <button
+                    type="submit"
+                    className="custom-btn-block"
+                    disabled={loading}
+                  >
                     Create Account
                   </button>
                 ) : (
@@ -209,12 +307,17 @@ const Signup = () => {
 
               <div className="signup-option">
                 Already have an account?
-                <Link to="/login" className="signup-link">Log in</Link>
+                <Link to="/login" className="signup-link">
+                  Log in
+                </Link>
               </div>
 
               {!providerLoading ? (
                 <div className="alternative-login mt-3">
-                  <button className="btn btn-light mr-2" onClick={handleGoogleSignIn}>
+                  <button
+                    className="btn btn-light mr-2"
+                    onClick={handleGoogleSignIn}
+                  >
                     <GoogleLogo width={20} height={20} />
                   </button>
                 </div>

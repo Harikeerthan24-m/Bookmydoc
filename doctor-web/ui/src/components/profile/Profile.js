@@ -418,7 +418,10 @@ const Profile = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Registration Number <span style={{ color: 'var(--color-danger)' }}>*</span></label>
+                  <label>
+                    Registration Number{' '}
+                    <span style={{ color: 'var(--color-danger)' }}>*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-control"
