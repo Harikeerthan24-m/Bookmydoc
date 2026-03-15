@@ -90,6 +90,24 @@
   color: #94a3b8;
 }
 
+.empty-consultations-cta {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.45rem 1rem;
+  background: var(--color-primary, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.empty-consultations-cta:hover {
+  opacity: 0.88;
+}
+
 .more-consultations {
   text-align: center;
   padding: 0.5rem;

@@ -294,17 +294,19 @@ const TopBar = () => {
                       </div>
                     )}
                   </div>
-                  <div className="notifications-footer">
-                    <button
-                      className="view-all"
-                      onClick={() => {
-                        navigate('/notifications');
-                        setShowNotifications(false);
-                      }}
-                    >
-                      View All Notifications
-                    </button>
-                  </div>
+                  {notifications?.length > 0 && (
+                    <div className="notifications-footer">
+                      <button
+                        className="view-all"
+                        onClick={() => {
+                          navigate('/notifications');
+                          setShowNotifications(false);
+                        }}
+                      >
+                        View All Notifications
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

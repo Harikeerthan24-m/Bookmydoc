@@ -1,854 +1,599 @@
-/* Availability Page Styling */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
 
+/* ─────────────────────────────────────────
+   Theme tokens — mapped to global design system
+───────────────────────────────────────── */
 #availability {
-  --avail-transition: all 0.15s ease-in-out;
-  --avail-radius: var(--radius-sm);
+  --av-bg: var(--color-bg);
+  --av-surface: var(--color-card);
+  --av-card: var(--color-bg);
+  --av-card-active: var(--color-primary-subtle);
+  --av-border: var(--color-border);
+  --av-border-active: var(--color-primary);
+
+  --av-primary: var(--color-primary);
+  --av-primary-dim: var(--color-primary-light);
+  --av-primary-glow: var(--shadow-primary);
+
+  --av-text: var(--color-text);
+  --av-text-muted: var(--color-text-muted);
+  --av-text-subtle: var(--color-text-light);
+
+  --av-danger: var(--color-danger);
+  --av-danger-dim: var(--color-danger-light);
+
+  --av-toggle-off: var(--color-border);
+  --av-toggle-on: var(--color-primary);
+
+  --av-radius: var(--radius-md);
+  --av-radius-sm: var(--radius-sm);
+  --av-transition: var(--transition-base);
 }
 
-/* Main Container */
+/* ─────────────────────────────────────────
+   Page shell
+───────────────────────────────────────── */
 #availability {
   min-height: 100vh;
-  background: var(--color-card);
-  padding: 1.5rem 1rem;
-  font-family:
-    'Inter',
-    'Segoe UI',
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
+  background: var(--av-bg);
+  padding: 2rem 1rem 4rem;
+  font-family: var(--font-family);
+  color: var(--av-text);
 }
 
-#availability .container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  max-width: 900px;
+/* Subtle gradient texture */
+#availability::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(
+      circle at 15% 15%,
+      rgba(24, 160, 251, 0.05) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 85% 85%,
+      rgba(24, 160, 251, 0.03) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.av-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
   margin: 0 auto;
 }
 
-/* Main Card */
-#availability .card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
-  width: 100%;
-  max-width: 800px;
-  padding: 1.5rem;
-  position: relative;
-  overflow: visible;
+/* ─────────────────────────────────────────
+   Header
+───────────────────────────────────────── */
+.av-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-/* Header Section */
-#availability .d-flex.justify-content-between {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-#availability h1 {
-  color: var(--color-text);
-  font-size: 1.75rem;
+.av-eyebrow {
+  font-size: 0.72rem;
   font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--av-primary);
+  margin: 0 0 0.5rem;
+}
+
+.av-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--av-text);
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.av-subtitle {
+  font-size: 0.85rem;
+  color: var(--av-text-muted);
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-weight: 400;
 }
 
-/* Save Button */
-#availability .btn-primary {
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 1.5rem;
-  font-weight: 500;
+/* ─────────────────────────────────────────
+   Save button (header)
+───────────────────────────────────────── */
+.av-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--av-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--av-radius-sm);
+  padding: 0.6rem 1.25rem;
+  font-family: var(--font-family);
   font-size: 0.875rem;
-  transition: var(--avail-transition);
-  color: var(--color-card);
-}
-
-#availability .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-  box-shadow: var(--shadow-xs);
-}
-
-/* Button Container for Add Slot and Save */
-#availability .d-flex.gap-2.mt-2 {
-  align-items: center;
-}
-
-#availability .d-flex.gap-2.mt-2 .btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#availability .btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background: var(--color-text-light);
-  border-color: var(--color-text-light);
-}
-
-/* Day Container */
-#availability .day-container {
-  background: var(--color-card);
-  border-radius: var(--radius-sm);
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid var(--color-border);
-  transition: var(--avail-transition);
-}
-
-#availability .day-container:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-xs);
-}
-
-/* Day Switch */
-#availability .day-switch {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-#availability .custom-switch .form-check-input {
-  width: 2.5rem;
-  height: 1.4rem;
-  background-color: var(--color-border);
-  border: 1px solid var(--color-border);
-  border-radius: 0.7rem;
-  position: relative;
-  transition: var(--avail-transition);
-  cursor: pointer;
-}
-
-#availability .custom-switch .form-check-input:checked {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-#availability .custom-switch .form-check-input::before {
-  content: '';
-  position: absolute;
-  width: 1rem;
-  height: 1rem;
-  background: var(--color-card);
-  border-radius: 50%;
-  top: 0.15rem;
-  left: 0.15rem;
-  transition: var(--avail-transition);
-  box-shadow: var(--shadow-xs);
-}
-
-#availability .custom-switch .form-check-input:checked::before {
-  transform: translateX(1.1rem);
-}
-
-#availability .custom-switch .form-check-label {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--color-text);
-  text-transform: capitalize;
-  cursor: pointer;
-  margin-left: 0.5rem;
-}
-
-/* Time Slots Container */
-#availability .time-slots-container {
-  margin-left: 0.75rem;
-  padding: 0.75rem;
-  background: var(--color-card);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-}
-
-/* Input Group Styling */
-#availability .input-group {
-  background: var(--color-card);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-xs);
-  margin-bottom: 0.75rem;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  transition: var(--avail-transition);
-}
-
-#availability .input-group:hover {
-  border-color: var(--color-primary);
-}
-
-/* Dropdown Buttons */
-#availability .dropdown-toggle {
-  background: var(--color-card);
-  border: none;
-  color: var(--color-text);
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  border-right: 1px solid var(--color-border);
-  min-width: 110px;
-  text-align: left;
-  position: relative;
-  font-size: 0.8rem;
-}
-
-#availability .dropdown-toggle:hover,
-#availability .dropdown-toggle:focus {
-  background: var(--color-bg);
-  color: var(--color-primary);
-  box-shadow: none;
-}
-
-#availability .dropdown-toggle::after {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* Dropdown Menu */
-#availability .dropdown-menu {
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-sm);
-  padding: 0.25rem 0;
-  margin-top: 0.125rem;
-  min-width: 110px;
-}
-
-#availability .dropdown-scrollable {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-#availability .dropdown-scrollable::-webkit-scrollbar {
-  width: 4px;
-}
-
-#availability .dropdown-scrollable::-webkit-scrollbar-track {
-  background: var(--color-bg-alt);
-  border-radius: 2px;
-}
-
-#availability .dropdown-scrollable::-webkit-scrollbar-thumb {
-  background: var(--color-text-light);
-  border-radius: 2px;
-}
-
-#availability .dropdown-scrollable::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
-}
-
-#availability .dropdown-item {
-  padding: 0.375rem 0.75rem;
-  color: var(--color-text);
-  transition: var(--avail-transition);
-  font-weight: 500;
-  font-size: 0.8rem;
-}
-
-#availability .dropdown-item:hover {
-  background: var(--color-primary);
-  color: var(--color-card);
-}
-
-/* Separator */
-#availability .input-group-text {
-  background: var(--color-bg-alt);
-  border: none;
-  color: var(--color-text-muted);
-  font-weight: 500;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8rem;
-}
-
-/* Action Buttons */
-#availability .btn-outline-secondary,
-#availability .btn-outline-danger {
-  border: 1px solid var(--color-border);
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-sm);
-  transition: var(--avail-transition);
-  margin-left: 0.375rem;
-  min-width: 80px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-#availability .btn-outline-secondary {
-  background: var(--color-card);
-  color: var(--color-text-muted);
-}
-
-#availability .btn-outline-secondary:hover {
-  background: var(--color-primary);
-  color: var(--color-card);
-  border-color: var(--color-primary);
-}
-
-#availability .btn-outline-danger {
-  background: var(--color-card);
-  color: var(--color-danger);
-}
-
-#availability .btn-outline-danger:hover {
-  background: var(--color-danger);
-  color: var(--color-card);
-  border-color: var(--color-danger);
-}
-
-/* Predefined Time Slots */
-#availability .d-flex.flex-wrap.gap-2 .btn-outline-secondary {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  min-width: 100px;
-  transition: var(--avail-transition);
-}
-
-#availability .d-flex.flex-wrap.gap-2 .btn-outline-secondary:hover {
-  background: var(--color-bg);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-/* Add Time Slot Button */
-#availability .btn-outline-primary {
-  background: var(--color-primary);
-  color: var(--color-card);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  transition: var(--avail-transition);
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
-  min-width: 100px;
-  height: 36px;
-}
-
-/* Global Save Button */
-#availability .save-button {
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 2rem;
   font-weight: 600;
-  font-size: 1rem;
-  transition: var(--avail-transition);
-  color: var(--color-card);
-  min-width: 180px;
-  height: 48px;
-  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: var(--av-transition);
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-primary);
 }
 
-#availability .save-button:hover:not(:disabled) {
+.av-save-btn:hover:not(:disabled) {
   background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-primary-lg);
   transform: translateY(-1px);
 }
 
-#availability .btn-outline-primary:hover {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-  box-shadow: var(--shadow-xs);
-}
-
-/* Icons */
-#availability .fa-plus,
-#availability .fa-trash,
-#availability .fa-clone {
-  font-size: 0.75rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  #availability {
-    padding: 1rem 0.5rem;
-  }
-
-  #availability .card {
-    padding: 1rem;
-    margin: 0 0.25rem;
-  }
-
-  #availability h1 {
-    font-size: 1.5rem;
-  }
-
-  #availability .day-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem;
-  }
-
-  #availability .time-slots-container {
-    margin-left: 0;
-    width: 100%;
-    padding: 0.5rem;
-  }
-
-  #availability .input-group {
-    flex-wrap: wrap;
-    gap: 0.375rem;
-  }
-
-  #availability .dropdown-toggle {
-    min-width: 90px;
-    font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
-  }
-}
-
-@media (max-width: 576px) {
-  #availability .d-flex.justify-content-between {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: stretch;
-  }
-
-  #availability .input-group {
-    flex-direction: column;
-    gap: 0.375rem;
-  }
-
-  #availability .dropdown-toggle {
-    min-width: auto;
-    width: 100%;
-  }
-
-  #availability .btn-outline-secondary,
-  #availability .btn-outline-danger {
-    width: 100%;
-    margin-left: 0;
-    height: 32px;
-    min-width: auto;
-  }
-}
-
-/* Focus States for Accessibility */
-#availability .form-check-input:focus,
-#availability .btn:focus,
-#availability .dropdown-toggle:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-  box-shadow: 0 0 0 2px rgba(24, 160, 251, 0.1);
-}
-
-/* Professional Medical Typography */
-#availability {
-  font-weight: 400;
-  line-height: 1.4;
-  color: var(--color-text);
-}
-
-#availability .card {
-  font-size: 0.875rem;
-}
-
-/* Clean, Clinical Appearance */
-#availability .day-container {
-  background: var(--color-card);
-}
-
-#availability .time-slots-container {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-}
-
-/* Professional Button States */
-#availability .btn:not(:disabled):hover {
+.av-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
-#availability .btn-primary:focus {
-  box-shadow: 0 0 0 2px rgba(24, 160, 251, 0.1);
+.av-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: av-spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
-#availability .btn-outline-secondary:focus,
-#availability .btn-outline-danger:focus {
-  box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.1);
+@keyframes av-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Calendly-Style Time Slot Design */
-#availability .calendly-time-slot {
-  background: var(--color-card);
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  transition: all 0.2s ease;
-  overflow: visible;
+/* ─────────────────────────────────────────
+   Week overview strip
+───────────────────────────────────────── */
+.av-week-strip {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius);
+}
+
+.av-week-dot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0.5rem 0.25rem;
+  background: transparent;
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius-sm);
+  cursor: pointer;
+  transition: var(--av-transition);
+  color: var(--av-text-muted);
+  font-family: 'Outfit', sans-serif;
+}
+
+.av-week-dot:hover {
+  border-color: var(--av-primary);
+  color: var(--av-primary);
+  background: var(--av-primary-dim);
+}
+
+.av-week-dot.active {
+  background: var(--av-primary-dim);
+  border-color: var(--av-primary);
+  color: var(--av-primary);
+  box-shadow: var(--av-primary-glow);
+}
+
+.av-dot-abbr {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.av-dot-count {
+  width: 16px;
+  height: 16px;
+  background: var(--av-primary);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ─────────────────────────────────────────
+   Day cards list
+───────────────────────────────────────── */
+.av-days-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.av-day-card {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius);
+  overflow: hidden;
+  transition: border-color var(--av-transition), box-shadow var(--av-transition);
+}
+
+.av-day-card.is-active {
+  border-color: var(--av-border-active);
+  background: var(--av-card-active);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.08),
+    inset 0 1px 0 rgba(16, 185, 129, 0.06);
+}
+
+/* Day row header */
+.av-day-row-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  cursor: default;
+}
+
+/* Toggle */
+.av-toggle {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.av-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.av-toggle-track {
+  display: block;
+  width: 40px;
+  height: 22px;
+  background: var(--av-toggle-off);
+  border-radius: 11px;
+  border: 1px solid var(--av-border);
+  transition: background var(--av-transition), border-color var(--av-transition);
   position: relative;
 }
 
-#availability .calendly-time-slot:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(24, 160, 251, 0.1);
+.av-toggle input:checked + .av-toggle-track {
+  background: var(--av-toggle-on);
+  border-color: var(--av-toggle-on);
 }
 
-#availability .time-slot-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e1e5e9;
+.av-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform var(--av-transition);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-#availability .time-display {
+.av-toggle input:checked + .av-toggle-track .av-toggle-thumb {
+  transform: translateX(18px);
+}
+
+/* Day name */
+.av-day-info {
   flex: 1;
 }
 
-#availability .time-text {
-  font-size: 16px;
+.av-day-name {
+  display: block;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--av-text);
   letter-spacing: -0.01em;
 }
 
-#availability .time-slot-actions {
-  display: flex;
-  gap: 8px;
+.av-day-abbr {
+  display: none;
 }
 
-#availability .action-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 12px;
-}
-
-#availability .copy-btn {
-  background: #f7fafc;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
-}
-
-#availability .copy-btn:hover {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-}
-
-#availability .delete-btn {
-  background: #fef5e7;
-  color: #d69e2e;
-  border: 1px solid #f6e05e;
-}
-
-#availability .delete-btn:hover {
-  background: #e53e3e;
-  color: white;
-  border-color: #e53e3e;
-}
-
-#availability .time-editor {
-  padding: 20px;
-  display: flex;
-  align-items: end;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-#availability .time-input-group {
-  flex: 1;
-  min-width: 140px;
-}
-
-#availability .time-label {
-  display: block;
-  font-size: 12px;
+/* Status badge */
+.av-status-badge {
+  font-size: 0.72rem;
   font-weight: 600;
-  color: #4a5568;
-  margin-bottom: 6px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+.av-status-badge.active {
+  background: var(--av-primary-dim);
+  color: var(--av-primary);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.av-status-badge.inactive {
+  background: transparent;
+  color: var(--av-text-subtle);
+  border: 1px solid var(--av-border);
+}
+
+/* ─────────────────────────────────────────
+   Slots panel
+───────────────────────────────────────── */
+.av-slots-panel {
+  padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--av-border);
+  animation: av-slide-down 0.2s ease;
+}
+
+@keyframes av-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.av-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+/* Individual slot row */
+.av-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--av-card);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius-sm);
+  padding: 0.75rem 1rem;
+  transition: border-color var(--av-transition);
+}
+
+.av-slot-row:hover {
+  border-color: var(--av-border-active);
+}
+
+.av-slot-index {
+  width: 22px;
+  height: 22px;
+  background: var(--av-border);
+  color: var(--av-text-muted);
+  border-radius: 50%;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Time fields */
+.av-slot-times {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.av-time-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.av-time-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--av-text-muted);
 }
 
-#availability .time-separator {
-  font-size: 14px;
+.av-time-select {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-radius-sm);
+  color: var(--av-text);
+  font-family: 'Fira Code', monospace;
+  font-size: 0.82rem;
   font-weight: 500;
-  color: #718096;
-  margin-bottom: 6px;
-  align-self: flex-end;
-}
-
-/* Quick Preset Buttons */
-#availability .preset-btn {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  border-radius: var(--radius-sm);
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: var(--avail-transition);
-  min-width: 70px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#availability .preset-btn:hover {
-  background: var(--color-primary);
-  color: var(--color-card);
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-xs);
-}
-
-/* Calendly-Style Dropdowns */
-#availability .calendly-time-dropdown {
-  width: 100%;
-  position: relative;
-}
-
-#availability .calendly-time-dropdown .dropdown-toggle {
-  background: var(--color-card);
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  color: #374151;
-  padding: 10px 12px;
-  font-weight: 500;
-  font-size: 14px;
-  width: 100%;
-  text-align: left;
-  transition: all 0.2s ease;
-  box-shadow: none;
-  position: relative;
-}
-
-#availability .calendly-time-dropdown .dropdown-toggle:hover,
-#availability .calendly-time-dropdown .dropdown-toggle:focus {
-  background: var(--color-card);
-  border-color: var(--color-primary);
-  color: #374151;
-  box-shadow: 0 0 0 3px rgba(24, 160, 251, 0.1);
-}
-
-#availability .calendly-time-dropdown .dropdown-toggle::after {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-top: 4px solid #6b7280;
-  border-right: 4px solid transparent;
-  border-left: 4px solid transparent;
-  border-bottom: none;
-}
-
-#availability .calendly-time-dropdown .dropdown-menu {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  padding: 8px 0;
-  margin-top: 4px;
-  min-width: 100%;
-  max-height: 200px;
-  overflow-y: auto;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 1050;
-  background: white;
-}
-
-#availability .calendly-time-dropdown.show .dropdown-menu {
-  display: block;
-}
-
-#availability .time-option {
-  padding: 10px 16px;
-  color: #374151;
-  transition: all 0.15s ease;
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
+  padding: 0.45rem 0.65rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  padding-right: 1.8rem;
   cursor: pointer;
+  transition: border-color var(--av-transition), box-shadow var(--av-transition);
+  width: 100%;
 }
 
-#availability .time-option:hover {
-  background: #f3f4f6;
-  color: var(--color-primary);
+.av-time-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
-#availability .time-option:active,
-#availability .time-option:focus {
-  background: var(--color-primary);
-  color: white;
+.av-time-select option {
+  background: #ffffff;
+  color: var(--av-text);
 }
 
-/* Ensure dropdowns are not clipped by parent containers */
-#availability .dropdown {
-  position: static;
-}
-
-#availability .dropdown-menu {
-  position: absolute !important;
-  will-change: transform;
-  transform: translate3d(0px, 0px, 0px);
-}
-
-/* Fix for Bootstrap dropdown positioning */
-#availability .calendly-time-dropdown .dropdown-menu.show {
-  display: block;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 1050;
-}
-
-/* Time Slots List Container */
-#availability .time-slots-list {
-  margin-top: 1rem;
-  overflow: visible;
-}
-
-#availability .time-slots-container {
-  overflow: visible;
-}
-
-#availability .time-editor {
-  padding: 20px;
+.av-time-arrow {
+  color: var(--av-text-muted);
+  flex-shrink: 0;
   display: flex;
-  align-items: end;
-  gap: 16px;
-  flex-wrap: wrap;
-  overflow: visible;
+  align-items: center;
+  margin-top: 1rem;
 }
 
-/* Action Buttons in Time Slots */
-#availability .time-slot-item .btn {
-  border-radius: var(--radius-sm);
-  transition: var(--avail-transition);
-  height: 32px;
-  min-width: 32px;
+/* Slot action buttons */
+.av-slot-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin-top: 0.9rem;
+}
+
+.av-icon-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--av-border);
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.375rem;
+  cursor: pointer;
+  transition: var(--av-transition);
+  font-size: 0.7rem;
+  background: transparent;
+  color: var(--av-text-muted);
+  flex-shrink: 0;
 }
 
-#availability .time-slot-item .btn-outline-secondary {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
+.av-clone-btn:hover {
+  background: var(--av-primary-dim);
+  border-color: var(--av-primary);
+  color: var(--av-primary);
 }
 
-#availability .time-slot-item .btn-outline-secondary:hover {
-  background: var(--color-primary);
-  color: var(--color-card);
-  border-color: var(--color-primary);
+.av-delete-btn:hover {
+  background: var(--av-danger-dim);
+  border-color: var(--av-danger);
+  color: var(--av-danger);
 }
 
-#availability .time-slot-item .btn-outline-danger {
-  background: var(--color-card);
-  border: 1px solid var(--color-danger);
-  color: var(--color-danger);
-}
-
-#availability .time-slot-item .btn-outline-danger:hover {
-  background: var(--color-danger);
-  color: var(--color-card);
-  border-color: var(--color-danger);
-}
-
-/* Quick Presets Section */
-#availability .quick-presets-section {
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: var(--color-bg);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-}
-
-#availability .quick-presets-section p {
-  margin-bottom: 0.5rem;
+/* Add slot button */
+.av-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0.45rem 0.9rem;
+  background: transparent;
+  border: 1px dashed var(--av-border-active);
+  border-radius: var(--av-radius-sm);
+  color: var(--av-primary);
+  font-family: var(--font-family);
   font-size: 0.8rem;
-  color: var(--color-text-muted);
   font-weight: 500;
+  cursor: pointer;
+  transition: var(--av-transition);
 }
 
-/* Mobile Responsiveness for Calendly-Style Components */
-@media (max-width: 768px) {
-  #availability .time-slot-header {
-    padding: 12px 16px;
+.av-add-btn:hover {
+  background: var(--av-primary-dim);
+  border-color: var(--av-primary);
+}
+
+.av-add-btn svg,
+.av-add-btn .fa-plus {
+  font-size: 0.65rem;
+}
+
+/* ─────────────────────────────────────────
+   Footer save
+───────────────────────────────────────── */
+.av-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.av-save-lg {
+  padding: 0.8rem 2.5rem;
+  font-size: 0.95rem;
+  border-radius: 10px;
+}
+
+/* ─────────────────────────────────────────
+   Responsive
+───────────────────────────────────────── */
+@media (max-width: 600px) {
+  #availability {
+    padding: 1.25rem 0.75rem 3rem;
   }
 
-  #availability .time-text {
-    font-size: 14px;
-  }
-
-  #availability .time-editor {
-    padding: 16px;
+  .av-header {
     flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    gap: 1rem;
   }
 
-  #availability .time-input-group {
-    min-width: auto;
+  .av-save-btn:not(.av-save-lg) {
+    width: 100%;
+    justify-content: center;
   }
 
-  #availability .time-separator {
-    align-self: center;
-    margin-bottom: 0;
-    order: -1;
+  .av-title {
+    font-size: 1.6rem;
   }
 
-  #availability .action-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 11px;
+  .av-week-strip {
+    padding: 0.75rem;
+    gap: 0.35rem;
+  }
+
+  .av-day-name {
+    display: none;
+  }
+
+  .av-day-abbr {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--av-text);
+  }
+
+  .av-slot-times {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .av-time-arrow {
+    display: none;
+  }
+
+  .av-slot-row {
+    flex-wrap: wrap;
+  }
+
+  .av-slot-actions {
+    margin-top: 0;
   }
 }
 
-@media (max-width: 576px) {
-  #availability .calendly-time-slot {
-    margin-bottom: 8px;
+@media (max-width: 400px) {
+  .av-week-strip {
+    gap: 0.25rem;
   }
 
-  #availability .time-slot-header {
-    padding: 10px 12px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  #availability .time-slot-actions {
-    align-self: flex-end;
-  }
-
-  #availability .time-editor {
-    padding: 12px;
-  }
-
-  #availability .calendly-time-dropdown .dropdown-toggle {
-    padding: 8px 10px;
-    font-size: 13px;
-  }
-
-  #availability .time-label {
-    font-size: 11px;
+  .av-dot-abbr {
+    font-size: 0.65rem;
   }
 }

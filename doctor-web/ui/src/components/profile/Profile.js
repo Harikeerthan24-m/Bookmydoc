@@ -119,8 +119,19 @@ const Profile = () => {
     setFormFields((prev) => ({ ...prev, photoUrl: e.target.files[0] }));
   };
 
+  const handleFormKeyDown = (e) => {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      handleFormSubmit(e);
+    }
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    if (!formFields.doctor_registration_number?.trim()) {
+      toast.error('Registration Number is required.');
+      return;
+    }
     const formData = new FormData();
     formData.append('user_name', String(formFields.user_name));
     formData.append('title', String(formFields.title));
@@ -326,6 +337,7 @@ const Profile = () => {
 
           <form
             onSubmit={handleFormSubmit}
+            onKeyDown={handleFormKeyDown}
             encType="multipart/form-data"
             className="profile-form"
           >
@@ -406,7 +418,7 @@ const Profile = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Registration Number</label>
+                  <label>Registration Number <span style={{ color: 'var(--color-danger)' }}>*</span></label>
                   <input
                     type="text"
                     className="form-control"
@@ -414,6 +426,7 @@ const Profile = () => {
                     value={formFields.doctor_registration_number}
                     onChange={handleChange}
                     placeholder="e.g. MCI-12345"
+                    required
                   />
                 </div>
               </div>

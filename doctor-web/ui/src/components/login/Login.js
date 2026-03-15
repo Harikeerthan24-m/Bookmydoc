@@ -25,6 +25,8 @@ const Login = () => {
     password: '',
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [formValidation, setFormValidation] = useState({
     errors: {},
     message: '',
@@ -36,7 +38,10 @@ const Login = () => {
 
   // REDUX ACTIONS EFFECTS WITH LOGIN USER..
   useEffect(() => {
-    if (!isAuthenticated && !loading && error?.message) {
+    const isTokenError = (error?.message || error?.error?.message || '')
+      .toLowerCase()
+      .includes('invalid token');
+    if (!isAuthenticated && !loading && error?.message && !isTokenError) {
       // Handle role mismatch error specifically
       if (
         error?.error?.message?.includes(
@@ -171,13 +176,27 @@ const Login = () => {
                 </div>
                 <div className="form-group">
                   <label htmlFor="password">Password</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="password"
-                    name="password"
-                    onChange={(e) => handleChange('password', e)}
-                  />
+                  <div className="password-input-wrap">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="form-control"
+                      id="password"
+                      name="password"
+                      onChange={(e) => handleChange('password', e)}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword((p) => !p)}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/></svg>
+                      )}
+                    </button>
+                  </div>
                   {formValidation?.errors?.password && (
                     <small className="text-danger">
                       {formValidation?.errors?.password}
@@ -193,7 +212,7 @@ const Login = () => {
                   <button
                     disabled={loading}
                     type="submit"
-                    className="btn custom-btn-block"
+                    className="custom-btn-block"
                   >
                     {!loading ? 'Login' : 'Loading...'}
                   </button>
@@ -201,18 +220,14 @@ const Login = () => {
                   <Loading type="inline" size="default" />
                 )}
               </form>
-              <div className="signup-option mt-3">
-                <span>
-                  Don't have an account?? <Link to="/Signup">Signup</Link>
-                </span>
+              <div className="signup-option">
+                Don't have an account?
+                <Link to="/Signup" className="signup-link">Sign up</Link>
               </div>
 
               {!providerLoading ? (
                 <div className="alternative-login mt-3">
-                  <button
-                    className="btn btn-light mr-2"
-                    onClick={handleGoogleSignIn}
-                  >
+                  <button className="btn btn-light mr-2" onClick={handleGoogleSignIn}>
                     <GoogleLogo width={20} height={20} />
                   </button>
                 </div>
