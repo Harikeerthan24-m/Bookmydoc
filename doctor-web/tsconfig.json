@@ -25,5 +25,6 @@
     },
     "resolveJsonModule": true,
     "esModuleInterop": true
-  }
+  },
+  "exclude": ["node_modules", "ui"]
 }
