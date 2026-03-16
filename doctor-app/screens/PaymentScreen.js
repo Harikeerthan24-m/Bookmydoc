@@ -126,7 +126,6 @@ const Payment = ({ navigation }) => {
           // console.error('Payment Error', error);
         });
     }, 1500);
-
   };
 
   return (

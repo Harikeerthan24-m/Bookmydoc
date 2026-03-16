@@ -34,4 +34,4 @@ COPY --from=builder /app/tsconfig.json ./
 
 EXPOSE 8080/tcp
 
-CMD npm run start:prod
+CMD ["node", "dist/src/main"]

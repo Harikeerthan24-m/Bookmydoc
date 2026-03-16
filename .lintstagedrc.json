@@ -1,0 +1,5 @@
+{
+  "doctor-app/**/*.{js,jsx,ts,tsx}": "prettier --write",
+  "doctor-web/src/**/*.{js,ts,tsx}": "prettier --write",
+  "doctor-web/ui/src/**/*.{js,jsx,ts,tsx,css}": "prettier --write"
+}

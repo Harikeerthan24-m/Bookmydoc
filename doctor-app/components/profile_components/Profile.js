@@ -248,9 +248,13 @@ const Menu = ({ navigation }) => {
     } else if (label === 'My Profile') {
       navigation.navigate('MyProfile');
     } else if (label === 'Privacy Policy') {
-      Linking.openURL('https://docs.google.com/document/d/e/2PACX-1vTtlOY9HWrD-CPQAQeqdG_20g67cKaXU8K6oje3ay1QzmXMgzRxjr46lBqGNJbkuQ/pub');
+      Linking.openURL(
+        'https://docs.google.com/document/d/e/2PACX-1vTtlOY9HWrD-CPQAQeqdG_20g67cKaXU8K6oje3ay1QzmXMgzRxjr46lBqGNJbkuQ/pub',
+      );
     } else if (label === 'Terms of Service') {
-      Linking.openURL('https://docs.google.com/document/d/e/2PACX-1vSFNHzHXwIOe6EcoDBoBBXDt78sZjQ0dkIaXSkyL_3CtL0PUzi_QXudTDhD-YiYCA/pub');
+      Linking.openURL(
+        'https://docs.google.com/document/d/e/2PACX-1vSFNHzHXwIOe6EcoDBoBBXDt78sZjQ0dkIaXSkyL_3CtL0PUzi_QXudTDhD-YiYCA/pub',
+      );
     } else if (label === 'Logout') {
       handleLogout();
     } else if (label === 'Delete Account') {
@@ -335,14 +339,22 @@ const MenuItem = ({
         <Ionicons
           name={iconName}
           size={22}
-          color={label === 'Logout' || label === 'Delete Account' ? '#e74c3c' : '#333'}
+          color={
+            label === 'Logout' || label === 'Delete Account'
+              ? '#e74c3c'
+              : '#333'
+          }
         />
       </View>
     ) : (
       <Image source={icon} style={styles.icon} />
     )}
     <Text
-      style={[styles.menuLabel, (label === 'Logout' || label === 'Delete Account') && styles.menuLabelLogout]}
+      style={[
+        styles.menuLabel,
+        (label === 'Logout' || label === 'Delete Account') &&
+          styles.menuLabelLogout,
+      ]}
     >
       {label}
     </Text>

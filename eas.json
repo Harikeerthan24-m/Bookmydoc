@@ -12,7 +12,12 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "APP_ENV": "production",
+        "API_URL": "https://bookmydoc-k230.onrender.com",
+        "API_BASE_URL": "https://bookmydoc-k230.onrender.com/api"
+      }
     }
   },
   "submit": {

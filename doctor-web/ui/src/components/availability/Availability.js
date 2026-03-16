@@ -1,16 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import {
-  Button,
-  Form,
-  Dropdown,
-  DropdownButton,
-  Card,
-  Row,
-  Col,
-} from 'react-bootstrap';
-import { ToastContainer } from 'react-toastify';
 import { FaPlus, FaTrash, FaClone } from 'react-icons/fa';
+import { ToastContainer } from 'react-toastify';
 import './Availability.css';
 import {
   useGetAvailabilitySlotsQuery,
@@ -142,7 +132,7 @@ const Availability = () => {
             "You can't select end time smaller than start time and cross the day.",
           options: { type: 'danger' },
         });
-        return prev; // Don't update state if invalid
+        return prev;
       }
 
       return updatedAvailability;
@@ -154,7 +144,6 @@ const Availability = () => {
       const currentSlots = prev[dayKey].timeSlots || [];
       let newSlot = { ...slot, day: dayKey };
 
-      // If there are existing slots, use the end time of the last slot as the start time
       if (currentSlots.length > 0) {
         const lastSlot = currentSlots[currentSlots.length - 1];
         newSlot = {
@@ -184,7 +173,7 @@ const Availability = () => {
       if (updatedAvailability[dayKey].timeSlots?.length <= 0) {
         updatedAvailability[dayKey].enabled = false;
       }
-      return updatedAvailability;
+      return { ...updatedAvailability };
     });
   };
 
@@ -199,7 +188,7 @@ const Availability = () => {
         0,
         clonedSlot,
       );
-      return updatedAvailability;
+      return { ...updatedAvailability };
     });
   };
 
@@ -215,180 +204,260 @@ const Availability = () => {
     saveAvailabilitySlots(payload);
   };
 
+  const activeDaysCount = Object.values(availability).filter(
+    (d) => d.enabled,
+  ).length;
+
   return (
     <div id="availability">
-      <div className="container mt-3 d-flex justify-content-center align-items-center">
-        {isLoading && <Loading type="overlay" text="Loading availability..." />}
-        <ToastContainer />
-        <Card
-          className="shadow-sm p-3"
-          style={{ width: '100%', maxWidth: '700px' }}
-        >
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h1 className="mb-0">Schedule</h1>
+      {isLoading && <Loading type="overlay" text="Loading availability..." />}
+      <ToastContainer />
+
+      <div className="av-wrapper">
+        {/* ── Header ── */}
+        <div className="av-header">
+          <div className="av-header-left">
+            <p className="av-eyebrow">Doctor Dashboard</p>
+            <h1 className="av-title">Weekly Schedule</h1>
+            <p className="av-subtitle">
+              {activeDaysCount === 0
+                ? 'No days configured — toggle days below to set your hours'
+                : `Available ${activeDaysCount} day${activeDaysCount !== 1 ? 's' : ''} this week`}
+            </p>
           </div>
-          <Form>
-            {Object.keys(availability).map((dayKey, dayIndex) => {
-              const day = availability[dayKey];
-              return (
-                <Row
-                  key={day.day}
-                  className="day-container mb-2 align-items-center"
-                >
-                  <Col
-                    xs={12}
-                    sm={3}
-                    className="d-flex align-items-center mb-2 mb-sm-0"
-                  >
-                    <Form.Check
-                      type="switch"
-                      id={`switch-${day.day}`}
-                      label={day.day}
+          <button
+            className="av-save-btn"
+            onClick={handleSave}
+            disabled={saveAvailabilitySlotsResult?.isLoading}
+          >
+            {saveAvailabilitySlotsResult?.isLoading ? (
+              <>
+                <span className="av-spinner" />
+                Saving…
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <polyline
+                    points="17 21 17 13 7 13 7 21"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <polyline
+                    points="7 3 7 8 15 8"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Save Schedule
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* ── Week Overview Strip ── */}
+        <div className="av-week-strip">
+          {Object.keys(availability).map((dayKey) => {
+            const day = availability[dayKey];
+            return (
+              <button
+                key={dayKey}
+                className={`av-week-dot ${day.enabled ? 'active' : ''}`}
+                onClick={() => handleToggle(dayKey)}
+                title={`Toggle ${day.day}`}
+              >
+                <span className="av-dot-abbr">{day.day.slice(0, 2)}</span>
+                {day.enabled && (
+                  <span className="av-dot-count">{day.timeSlots.length}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Day Rows ── */}
+        <div className="av-days-list">
+          {Object.keys(availability).map((dayKey) => {
+            const day = availability[dayKey];
+            return (
+              <div
+                key={dayKey}
+                className={`av-day-card ${day.enabled ? 'is-active' : ''}`}
+              >
+                {/* Day row header */}
+                <div className="av-day-row-header">
+                  <label className="av-toggle" title={`Toggle ${day.day}`}>
+                    <input
+                      type="checkbox"
                       checked={day.enabled}
                       onChange={() => handleToggle(dayKey)}
-                      className="day-switch custom-switch"
-                      style={{ textTransform: 'capitalize' }}
                     />
-                  </Col>
-                  <Col xs={12} sm={9}>
-                    {day.enabled && (
-                      <div className="time-slots-container">
-                        <div className="time-slots-list">
-                          {day.timeSlots.map((slot, slotIndex) => (
-                            <div key={slotIndex} className="calendly-time-slot">
-                              <div className="time-slot-header">
-                                <div className="time-display">
-                                  <span className="time-text">
-                                    {slot.start?.label} - {slot.end?.label}
-                                  </span>
-                                </div>
-                                <div className="time-slot-actions">
-                                  <button
-                                    className="action-btn copy-btn"
-                                    onClick={() =>
-                                      handleCloneSlot(dayKey, slotIndex)
-                                    }
-                                    title="Copy this time slot"
-                                  >
-                                    <FaClone />
-                                  </button>
-                                  <button
-                                    className="action-btn delete-btn"
-                                    onClick={() =>
-                                      handleRemoveSlot(dayKey, slotIndex)
-                                    }
-                                    title="Delete this time slot"
-                                  >
-                                    <FaTrash />
-                                  </button>
-                                </div>
-                              </div>
+                    <span className="av-toggle-track">
+                      <span className="av-toggle-thumb" />
+                    </span>
+                  </label>
 
-                              <div className="time-editor">
-                                <div className="time-input-group">
-                                  <label className="time-label">
-                                    Start Time
-                                  </label>
-                                  <DropdownButton
-                                    variant="outline-secondary"
-                                    title={slot.start?.label}
-                                    id={`dropdown-start-${dayIndex}-${slotIndex}`}
-                                    className="calendly-time-dropdown"
-                                    size="sm"
-                                    onSelect={(value) =>
-                                      handleTimeChange(
-                                        dayKey,
-                                        slotIndex,
-                                        'start',
-                                        value,
-                                      )
-                                    }
-                                  >
-                                    <div className="dropdown-scrollable">
-                                      {startTimeOptions.map((time, index) => (
-                                        <Dropdown.Item
-                                          key={index}
-                                          eventKey={JSON.stringify(time)}
-                                          className="time-option"
-                                        >
-                                          {time?.label}
-                                        </Dropdown.Item>
-                                      ))}
-                                    </div>
-                                  </DropdownButton>
-                                </div>
+                  <div className="av-day-info">
+                    <span className="av-day-name">{day.day}</span>
+                    <span className="av-day-abbr">
+                      {day.day.slice(0, 3).toUpperCase()}
+                    </span>
+                  </div>
 
-                                <div className="time-separator">to</div>
-
-                                <div className="time-input-group">
-                                  <label className="time-label">End Time</label>
-                                  <DropdownButton
-                                    variant="outline-secondary"
-                                    title={slot.end?.label}
-                                    id={`dropdown-end-${dayIndex}-${slotIndex}`}
-                                    className="calendly-time-dropdown"
-                                    size="sm"
-                                    onSelect={(value) =>
-                                      handleTimeChange(
-                                        dayKey,
-                                        slotIndex,
-                                        'end',
-                                        value,
-                                      )
-                                    }
-                                  >
-                                    <div className="dropdown-scrollable">
-                                      {endTimeOptions.map((time, index) => (
-                                        <Dropdown.Item
-                                          key={index}
-                                          eventKey={JSON.stringify(time)}
-                                          className="time-option"
-                                        >
-                                          {time?.label}
-                                        </Dropdown.Item>
-                                      ))}
-                                    </div>
-                                  </DropdownButton>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="mt-3">
-                          <Button
-                            variant="outline-primary"
-                            onClick={() => handleAddSlot(dayKey)}
-                            size="sm"
-                          >
-                            <FaPlus className="me-1" /> Add New Time Slot
-                          </Button>
-                        </div>
-                      </div>
+                  <div className="av-day-status">
+                    {day.enabled ? (
+                      <span className="av-status-badge active">
+                        {day.timeSlots.length} slot
+                        {day.timeSlots.length !== 1 ? 's' : ''}
+                      </span>
+                    ) : (
+                      <span className="av-status-badge inactive">
+                        Unavailable
+                      </span>
                     )}
-                  </Col>
-                </Row>
-              );
-            })}
-          </Form>
+                  </div>
+                </div>
 
-          {/* Global Save Button */}
-          <div className="d-flex justify-content-center mt-4">
-            <Button
-              variant="primary"
-              onClick={handleSave}
-              disabled={saveAvailabilitySlotsResult?.isLoading}
-              size="lg"
-              className="save-button"
-            >
-              {saveAvailabilitySlotsResult?.isLoading ? (
-                <Loading type="inline" size="small" text="Saving..." />
-              ) : (
-                'Save Schedule'
-              )}
-            </Button>
-          </div>
-        </Card>
+                {/* Expanded time slots panel */}
+                {day.enabled && (
+                  <div className="av-slots-panel">
+                    <div className="av-slots-list">
+                      {day.timeSlots.map((slot, slotIndex) => (
+                        <div key={slotIndex} className="av-slot-row">
+                          <div className="av-slot-index">{slotIndex + 1}</div>
+
+                          <div className="av-slot-times">
+                            <div className="av-time-field">
+                              <span className="av-time-label">From</span>
+                              <select
+                                className="av-time-select"
+                                value={slot.start_time}
+                                onChange={(e) => {
+                                  const opt = startTimeOptions.find(
+                                    (t) => t.value === e.target.value,
+                                  );
+                                  if (opt)
+                                    handleTimeChange(
+                                      dayKey,
+                                      slotIndex,
+                                      'start',
+                                      JSON.stringify(opt),
+                                    );
+                                }}
+                              >
+                                {startTimeOptions.map((time, i) => (
+                                  <option key={i} value={time.value}>
+                                    {time.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="av-time-arrow">
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                              >
+                                <path
+                                  d="M5 12h14M13 6l6 6-6 6"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </div>
+
+                            <div className="av-time-field">
+                              <span className="av-time-label">To</span>
+                              <select
+                                className="av-time-select"
+                                value={slot.end_time}
+                                onChange={(e) => {
+                                  const opt = endTimeOptions.find(
+                                    (t) => t.value === e.target.value,
+                                  );
+                                  if (opt)
+                                    handleTimeChange(
+                                      dayKey,
+                                      slotIndex,
+                                      'end',
+                                      JSON.stringify(opt),
+                                    );
+                                }}
+                              >
+                                {endTimeOptions.map((time, i) => (
+                                  <option key={i} value={time.value}>
+                                    {time.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="av-slot-actions">
+                            <button
+                              className="av-icon-btn av-clone-btn"
+                              onClick={() => handleCloneSlot(dayKey, slotIndex)}
+                              title="Duplicate"
+                            >
+                              <FaClone />
+                            </button>
+                            <button
+                              className="av-icon-btn av-delete-btn"
+                              onClick={() =>
+                                handleRemoveSlot(dayKey, slotIndex)
+                              }
+                              title="Remove"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      className="av-add-btn"
+                      onClick={() => handleAddSlot(dayKey)}
+                    >
+                      <FaPlus />
+                      Add Time Slot
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Footer save ── */}
+        <div className="av-footer">
+          <button
+            className="av-save-btn av-save-lg"
+            onClick={handleSave}
+            disabled={saveAvailabilitySlotsResult?.isLoading}
+          >
+            {saveAvailabilitySlotsResult?.isLoading ? (
+              <Loading type="inline" size="small" text="Saving..." />
+            ) : (
+              'Save Schedule'
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

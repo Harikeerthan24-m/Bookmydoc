@@ -128,7 +128,6 @@ const TopBar = () => {
 
   const userInfo = getUserDisplayInfo();
 
-
   return (
     <div className="topbar">
       {/* Left Section - Current Page */}
@@ -295,17 +294,19 @@ const TopBar = () => {
                       </div>
                     )}
                   </div>
-                  <div className="notifications-footer">
-                    <button
-                      className="view-all"
-                      onClick={() => {
-                        navigate('/notifications');
-                        setShowNotifications(false);
-                      }}
-                    >
-                      View All Notifications
-                    </button>
-                  </div>
+                  {notifications?.length > 0 && (
+                    <div className="notifications-footer">
+                      <button
+                        className="view-all"
+                        onClick={() => {
+                          navigate('/notifications');
+                          setShowNotifications(false);
+                        }}
+                      >
+                        View All Notifications
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

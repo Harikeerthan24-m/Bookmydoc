@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ConsultationList.css';
 
 const ConsultationList = ({
@@ -6,6 +7,7 @@ const ConsultationList = ({
   showTitle = true,
   maxItems = null,
 }) => {
+  const navigate = useNavigate();
   const displayConsultations = maxItems
     ? consultations.slice(0, maxItems)
     : consultations;
@@ -51,6 +53,12 @@ const ConsultationList = ({
             <small>
               Create your first consultation service to get started.
             </small>
+            <button
+              className="empty-consultations-cta"
+              onClick={() => navigate('/services')}
+            >
+              + Add Consultation Service
+            </button>
           </div>
         )}
       </div>

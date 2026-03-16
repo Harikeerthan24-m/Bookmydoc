@@ -260,10 +260,15 @@ const NotificationsPage = () => {
                             onClick={() => {
                               const bookingId = extractBookingId(notification);
                               if (!bookingId) {
-                                toast.error('Booking ID not found. Cannot process request.');
+                                toast.error(
+                                  'Booking ID not found. Cannot process request.',
+                                );
                                 return;
                               }
-                              handleApproveReschedule(bookingId, notification.id);
+                              handleApproveReschedule(
+                                bookingId,
+                                notification.id,
+                              );
                             }}
                             disabled={loadingNotifications.has(notification.id)}
                             className="me-2"
@@ -279,10 +284,15 @@ const NotificationsPage = () => {
                             onClick={() => {
                               const bookingId = extractBookingId(notification);
                               if (!bookingId) {
-                                toast.error('Booking ID not found. Cannot process request.');
+                                toast.error(
+                                  'Booking ID not found. Cannot process request.',
+                                );
                                 return;
                               }
-                              handleRejectReschedule(bookingId, notification.id);
+                              handleRejectReschedule(
+                                bookingId,
+                                notification.id,
+                              );
                             }}
                             disabled={loadingNotifications.has(notification.id)}
                           >

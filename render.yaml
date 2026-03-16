@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: bookmydoc-backend
+    env: node
+    rootDir: doctor-web
+    buildCommand: npm install && npm run build
+    startCommand: node dist/main
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOSTNAME
+        value: 0.0.0.0
+      # Add your real key in Render dashboard or via environment groups
+      - key: OPENAI_API_KEY
+        sync: false
