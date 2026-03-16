@@ -1,12 +1,21 @@
 // import { Platform } from 'react-native';
 import axios from 'axios';
-import { APP_ENV, LOCAL_IP, API_PORT } from '@env';
+import { APP_ENV, LOCAL_IP, API_PORT, API_BASE_URL } from '@env';
 
 const AppEnv = APP_ENV || 'development';
+const isProduction = AppEnv === 'production';
 
-// Dynamically construct API URLs using LOCAL_IP from .env
-// Changing LOCAL_IP (and API_PORT) in .env updates these automatically
-export const APP_URL = `http://${LOCAL_IP}:${API_PORT}`;
+// In production, use API_BASE_URL from env (set in your build/deploy environment, not committed to the repo).
+// In development, keep using LOCAL_IP and API_PORT from .env for local backend.
+const resolvedAppUrl = (() => {
+  if (isProduction && API_BASE_URL) {
+    // Normalize to avoid trailing slashes that would break `${APP_URL}/api`
+    return API_BASE_URL.replace(/\/+$/, '');
+  }
+  return `http://${LOCAL_IP}:${API_PORT}`;
+})();
+
+export const APP_URL = resolvedAppUrl;
 
 export const BASE_URL = `${APP_URL}/api`;
 

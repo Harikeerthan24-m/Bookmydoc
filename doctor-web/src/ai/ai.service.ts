@@ -183,6 +183,7 @@ export class AiService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async chat(dto: ChatRequestDto, _userId: string): Promise<ChatResponseDto> {
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    const isSearchRequest = dto.source === 'search';
 
     // Build conversation history
     const conversationHistory: ChatMessageDto[] = dto.conversationHistory || [];
@@ -199,6 +200,7 @@ export class AiService {
           apiKey,
           dto.previousTurnHadDoctorRecommendations === true,
           dto.userName?.trim() || undefined,
+          isSearchRequest,
         );
         aiResponse = result.response;
         extractedInfo = result.extractedInfo || {};
@@ -245,6 +247,26 @@ export class AiService {
     const inputType = extractedInfo?.inputType;
     const allowSearchForInputType =
       inputType === 'valid' || inputType === 'emotional';
+
+    // Search bar ("Ask AI") mode: return a best-guess specialist immediately.
+    // - Never ask clarification questions
+    // - Never persist to chat history
+    // - Never run doctor search (UI will filter doctors by specialist)
+    if (isSearchRequest) {
+      extractedInfo = {
+        ...(extractedInfo || {}),
+        needsClarification: false,
+        clarificationQuestions: [],
+        conversationStage: 'recommending',
+      };
+      return {
+        response: aiResponse,
+        extractedInfo,
+        doctorRecommendations: [],
+        conversationHistory: [],
+        searchedDoctors: false,
+      };
+    }
 
     const shouldSearchDoctors =
       allowSearchForInputType &&
@@ -519,6 +541,7 @@ export class AiService {
     apiKey: string,
     isPostRecommendationTurn = false,
     userName?: string,
+    isSearchRequest = false,
   ): Promise<{ response: string; extractedInfo?: any }> {
     const postRecommendationContext = isPostRecommendationTurn
       ? `
@@ -535,9 +558,20 @@ CONTEXT FOR THIS TURN: The user has ALREADY been shown doctor recommendations. T
 PATIENT NAME: The patient's name is "${userName}". Use their name naturally in your assistantMessage when it fits (e.g. first greeting: "Hi ${userName}, ...", or when acknowledging: "Thanks for sharing that, ${userName}."). Don't overuse it—once per reply or when it feels warm and natural.`
         : '';
 
+    const searchContext = isSearchRequest
+      ? `
+
+SEARCH MODE (Home/Explore Ask AI):
+- The user wants an immediate specialist for filtering doctors.
+- DO NOT ask any clarifying questions.
+- Always return conversationStage: "recommending".
+- Always choose exactly ONE specialist from the allowed list (best guess). If unsure, "General Physician".`
+      : '';
+
     const systemPrompt = `You are a friendly and empathetic AI healthcare assistant helping patients find the right specialist.
 ${nameContext}
 ${postRecommendationContext}
+${searchContext}
 
 CONVERSATION STAGES:
 - "gathering": Collecting symptom information by asking only one clarifying question at a time

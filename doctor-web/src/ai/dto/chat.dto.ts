@@ -64,6 +64,15 @@ export class ChatRequestDto {
   })
   @IsOptional()
   inputType?: 'text' | 'voice';
+
+  @ApiPropertyOptional({
+    description:
+      'Request source. Use "search" for the home/Explore Ask AI search bar (direct specialist recommendation, no clarification questions, and does not persist to chat history).',
+    enum: ['chat', 'voice', 'search'],
+  })
+  @IsOptional()
+  @IsString()
+  source?: 'chat' | 'voice' | 'search';
 }
 
 export class DoctorRecommendationDto {

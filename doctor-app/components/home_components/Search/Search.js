@@ -15,11 +15,10 @@ import { Audio } from 'expo-av';
 import Constants from 'expo-constants';
 import Global_Styles from '../../../utils/Global_Styles';
 import {
-  useClassifySymptomsMutation,
+  useChatMutation,
   useTranscribeAudioMutation,
 } from '../../../store/slices';
 import {
-  processAIResponse,
   getFallbackClassification,
 } from '../../../services/aiClassificationService';
 
@@ -39,7 +38,7 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
   const [aiResults, setAiResults] = useState(null);
   const [error, setError] = useState(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [classifySymptoms, { isLoading }] = useClassifySymptomsMutation();
+  const [chatMutation, { isLoading }] = useChatMutation();
   const [transcribeAudio, { isLoading: isTranscribing }] =
     useTranscribeAudioMutation();
   const [isRecording, setIsRecording] = useState(false);
@@ -97,15 +96,30 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
     setAiResults(null);
 
     try {
-      const response = await classifySymptoms({
-        description: inputText,
+      const response = await chatMutation({
+        message: inputText,
+        inputType: 'text',
+        source: 'search',
       }).unwrap();
 
-      const classificationData = response?.data ?? response;
-      const processedResults = processAIResponse(classificationData);
-      setAiResults(processedResults);
+      const specialist =
+        response?.extractedInfo?.specialists?.[0] || 'General Physician';
+
+      setAiResults({
+        specialists: [
+          {
+            name: specialist,
+            priority: 'high',
+            reason: 'Recommended based on your symptoms',
+          },
+        ],
+        urgency: response?.extractedInfo?.urgency || 'routine',
+        summary:
+          response?.extractedInfo?.summary ||
+          (typeof response?.response === 'string' ? response.response : ''),
+      });
     } catch (err) {
-      console.error('Classification error:', err);
+      console.error('Ask AI (search) error:', err);
       const fallbackResults = getFallbackClassification(inputText);
       setAiResults(fallbackResults);
       setError('Using offline classification. Results may be less accurate.');
