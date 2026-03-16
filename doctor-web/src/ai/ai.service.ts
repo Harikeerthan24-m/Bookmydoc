@@ -6,6 +6,7 @@ import {
   ChatMessageDto,
   DoctorRecommendationDto,
 } from './dto/chat.dto';
+import { SearchAiRequestDto } from './dto/search-ai.dto';
 import { DoctorService } from '../doctor/doctor.service';
 import { FirebaseService } from '../firebase/firebase.service';
 import FormData = require('form-data');
@@ -200,7 +201,6 @@ export class AiService {
           apiKey,
           dto.previousTurnHadDoctorRecommendations === true,
           dto.userName?.trim() || undefined,
-          isSearchRequest,
         );
         aiResponse = result.response;
         extractedInfo = result.extractedInfo || {};
@@ -327,6 +327,148 @@ export class AiService {
       doctorRecommendations,
       conversationHistory,
       searchedDoctors: shouldSearchDoctors && doctorRecommendations.length > 0,
+    };
+  }
+
+  /**
+   * Lightweight, stateless specialist search for the home/Explore Ask AI search bar.
+   * - Always returns immediately with a best-guess specialist from MEDICAL_SPECIALISTS.
+   * - Does NOT persist to chat history.
+   * - Does NOT run doctor search; the client uses the specialist to filter doctors.
+   */
+  async searchAi(dto: SearchAiRequestDto): Promise<{
+    specialist: string;
+    specialists: string[];
+    urgency: 'emergency' | 'urgent' | 'routine';
+    summary: string;
+  }> {
+    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    const message = dto.message?.trim() || '';
+    const userName = dto.userName?.trim() || undefined;
+
+    if (!message) {
+      console.log('[Search AI] empty message, returning General Physician');
+      return {
+        specialist: 'General Physician',
+        specialists: ['General Physician'],
+        urgency: 'routine',
+        summary:
+          'General medical consultation is recommended for your concern.',
+      };
+    }
+
+    if (apiKey) {
+      try {
+        const result = await this.searchWithOpenAI(message, apiKey, userName);
+        return {
+          specialist: result.specialist,
+          specialists: [result.specialist],
+          urgency: 'routine',
+          summary: result.reason,
+        };
+      } catch (error) {
+        console.warn(
+          '[AI] searchAi OpenAI failed, using fallback:',
+          (error as Error)?.message,
+        );
+      }
+    }
+
+    // Fallback: simple, safe default when OpenAI is unavailable
+    return {
+      specialist: 'General Physician',
+      specialists: ['General Physician'],
+      urgency: 'routine',
+      summary: this.getFallbackChatResponse(message, [], userName),
+    };
+  }
+
+  /**
+   * Dedicated OpenAI call for Search AI (Ask AI search bar).
+   * Returns a single best-match specialist and a short reason.
+   */
+  private async searchWithOpenAI(
+    message: string,
+    apiKey: string,
+    userName?: string,
+  ): Promise<{ specialist: string; reason: string }> {
+    const nameLine =
+      userName && userName.length > 0
+        ? `The patient's name is "${userName}". You may optionally use their name once in the explanation.`
+        : '';
+
+    const systemPrompt = `You are a medical triage assistant powering a doctor search bar.
+
+${nameLine}
+
+ALLOWED SPECIALISTS:
+${MEDICAL_SPECIALISTS.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+TASK:
+- The user types a short description of their symptoms or problem.
+- Your ONLY job is to pick ONE best specialist from the allowed list above.
+- If you are unsure, choose "General Physician".
+- DO NOT ask any questions.
+
+RESPONSE FORMAT (valid JSON only):
+{
+  "specialist": "Specialist Name from the allowed list",
+  "reason": "Very short explanation (1 sentence max)"
+}`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: message },
+    ];
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages,
+        response_format: { type: 'json_object' },
+        temperature: 0.3,
+        max_tokens: 180,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData?.error?.message || `OpenAI API error: ${response.status}`,
+      );
+    }
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error('Empty response from OpenAI (search)');
+    }
+
+    const parsed = this.parseAIResponse(content) as any;
+
+    const rawSpecialist =
+      typeof parsed?.specialist === 'string'
+        ? parsed.specialist.trim()
+        : 'General Physician';
+
+    const matchedSpecialist =
+      MEDICAL_SPECIALISTS.find(
+        (s) => s.toLowerCase() === rawSpecialist.toLowerCase(),
+      ) || 'General Physician';
+
+    const reason =
+      typeof parsed?.reason === 'string' && parsed.reason
+        ? parsed.reason
+        : 'Recommended based on your symptoms.';
+
+    return {
+      specialist: matchedSpecialist,
+      reason,
     };
   }
 
@@ -541,7 +683,6 @@ export class AiService {
     apiKey: string,
     isPostRecommendationTurn = false,
     userName?: string,
-    isSearchRequest = false,
   ): Promise<{ response: string; extractedInfo?: any }> {
     const postRecommendationContext = isPostRecommendationTurn
       ? `
@@ -558,20 +699,9 @@ CONTEXT FOR THIS TURN: The user has ALREADY been shown doctor recommendations. T
 PATIENT NAME: The patient's name is "${userName}". Use their name naturally in your assistantMessage when it fits (e.g. first greeting: "Hi ${userName}, ...", or when acknowledging: "Thanks for sharing that, ${userName}."). Don't overuse it—once per reply or when it feels warm and natural.`
         : '';
 
-    const searchContext = isSearchRequest
-      ? `
-
-SEARCH MODE (Home/Explore Ask AI):
-- The user wants an immediate specialist for filtering doctors.
-- DO NOT ask any clarifying questions.
-- Always return conversationStage: "recommending".
-- Always choose exactly ONE specialist from the allowed list (best guess). If unsure, "General Physician".`
-      : '';
-
     const systemPrompt = `You are a friendly and empathetic AI healthcare assistant helping patients find the right specialist.
 ${nameContext}
 ${postRecommendationContext}
-${searchContext}
 
 CONVERSATION STAGES:
 - "gathering": Collecting symptom information by asking only one clarifying question at a time

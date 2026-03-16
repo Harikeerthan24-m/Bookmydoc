@@ -23,6 +23,7 @@ import { Roles } from '@app/auth/decorators/roles.decorator';
 import { IRole } from '@app/common/types/type';
 import { AiService } from './ai.service';
 import { ChatRequestDto, ChatResponseDto } from './dto/chat.dto';
+import { SearchAiRequestDto } from './dto/search-ai.dto';
 import { TtsDto } from './dto/tts.dto';
 
 @Controller('ai')
@@ -125,6 +126,37 @@ export class AiController {
       statusCode: 200,
       data: result,
       message: 'Chat response generated successfully',
+    };
+  }
+
+  @Post('search-ai')
+  @Roles(IRole.CUSTOMER, IRole.ADMIN)
+  @ApiOperation({
+    summary:
+      'Search AI: get immediate specialist for symptoms (Ask AI search bar)',
+    description:
+      'Given a short free-text description of symptoms, returns a best-guess specialist from a fixed medical specialist list, plus urgency and a short summary. Stateless and does not persist to chat history.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Search AI specialist recommendation',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  async searchAi(@Body() dto: SearchAiRequestDto): Promise<{
+    statusCode: number;
+    data: {
+      specialist: string;
+      specialists: string[];
+      urgency: 'emergency' | 'urgent' | 'routine';
+      summary: string;
+    };
+    message: string;
+  }> {
+    const result = await this.aiService.searchAi(dto);
+    return {
+      statusCode: 200,
+      data: result,
+      message: 'Search AI specialist recommendation generated successfully',
     };
   }
 
