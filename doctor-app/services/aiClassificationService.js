@@ -47,13 +47,10 @@ RESPONSE FORMAT (JSON):
   "specialists": [
     {
       "name": "Specialist Name",
-      "priority": "high|medium|low",
       "reason": "Brief explanation why this specialist is recommended"
     }
-  ],
-  "urgency": "emergency|urgent|routine",
-  "summary": "Brief summary of the patient's concern"
-}
+  ]
+  }
 
 IMPORTANT:
 - Only recommend specialists from the available list

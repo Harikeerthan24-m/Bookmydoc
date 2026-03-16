@@ -15,12 +15,9 @@ import { Audio } from 'expo-av';
 import Constants from 'expo-constants';
 import Global_Styles from '../../../utils/Global_Styles';
 import {
-  useChatMutation,
+  useClassifySymptomsMutation,
   useTranscribeAudioMutation,
 } from '../../../store/slices';
-import {
-  getFallbackClassification,
-} from '../../../services/aiClassificationService';
 
 const ASK_AI_PLACEHOLDERS = [
   'e.g. Headache and fever for 2 days...',
@@ -38,7 +35,7 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
   const [aiResults, setAiResults] = useState(null);
   const [error, setError] = useState(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [chatMutation, { isLoading }] = useChatMutation();
+  const [classifySymptoms, { isLoading }] = useClassifySymptomsMutation();
   const [transcribeAudio, { isLoading: isTranscribing }] =
     useTranscribeAudioMutation();
   const [isRecording, setIsRecording] = useState(false);
@@ -96,28 +93,29 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
     setAiResults(null);
 
     try {
-      const response = await chatMutation({
+      const response = await classifySymptoms({
         message: inputText,
-        inputType: 'text',
-        source: 'search',
       }).unwrap();
 
-      const specialist =
-        response?.extractedInfo?.specialists?.[0] || 'General Physician';
+      const classificationData = response?.data ?? response;
+      const specialistNames = Array.isArray(classificationData?.specialists)
+        ? classificationData.specialists
+        : [classificationData?.specialist || 'General Physician'];
 
-      setAiResults({
-        specialists: [
-          {
-            name: specialist,
-            priority: 'high',
-            reason: 'Recommended based on your symptoms',
-          },
-        ],
-        urgency: response?.extractedInfo?.urgency || 'routine',
-        summary:
-          response?.extractedInfo?.summary ||
-          (typeof response?.response === 'string' ? response.response : ''),
-      });
+      const processedResults = {
+        specialists: specialistNames.map((name) => ({
+          name,
+          priority: 'high',
+          reason: 'Recommended based on your symptoms',
+        })),
+        urgency: classificationData?.urgency || 'routine',
+        summary: classificationData?.summary || '',
+      };
+
+      console.log('[Search Ask AI] raw response:', classificationData);
+      console.log('[Search Ask AI] mapped results:', processedResults);
+
+      setAiResults(processedResults);
     } catch (err) {
       console.error('Ask AI (search) error:', err);
       const fallbackResults = getFallbackClassification(inputText);

@@ -12,7 +12,7 @@ export const AISlice = createApi({
     return {
       classifySymptoms: build.mutation({
         query: (data) => ({
-          url: `/ai/classify-symptoms`,
+          url: `/ai/search-ai`,
           method: 'POST',
           headers: {
             accept: 'application/json',

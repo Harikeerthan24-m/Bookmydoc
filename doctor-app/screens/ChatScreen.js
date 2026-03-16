@@ -29,8 +29,6 @@ import {
 import Global_Styles, { headerShadow } from '../utils/Global_Styles';
 import DoctorListCard from '../components/DoctorListCard';
 
-const WELCOME_TEXT = 'Your AI Health care Assistant';
-
 const PAGE_SIZE = 25;
 
 function getDateLabel(isoString) {

@@ -19,6 +19,19 @@ export const APP_URL = resolvedAppUrl;
 
 export const BASE_URL = `${APP_URL}/api`;
 
+// Helpful debug logs to verify where the app is pointing and which base URL is used.
+// This runs once on startup.
+// eslint-disable-next-line no-console
+console.log('[API] Environment:', {
+  APP_ENV: AppEnv,
+  isProduction,
+  LOCAL_IP,
+  API_PORT,
+  API_BASE_URL,
+  APP_URL,
+  BASE_URL,
+});
+
 const DEFAULT_TIMEOUT = 30_000;
 
 const ERROR_CODES = {
