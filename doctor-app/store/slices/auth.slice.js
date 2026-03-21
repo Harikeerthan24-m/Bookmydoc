@@ -367,7 +367,8 @@ export const authGoogleSignIn = createAsyncThunk(
 // region AUTH CHECK
 export const authChecker = createAsyncThunk(
   'auth/checker',
-  async (_, { rejectWithValue }) => {
+  async (_, thunkAPI) => {
+    const { rejectWithValue } = thunkAPI;
     const state = thunkAPI.getState();
     const accessToken =
       state?.authSlice?.user?.accessToken ??
