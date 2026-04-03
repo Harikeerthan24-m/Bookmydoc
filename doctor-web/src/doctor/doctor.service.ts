@@ -37,15 +37,39 @@ export class DoctorService {
       }
     }
 
-    // filter by gender
-    if (
-      filters?.gender &&
-      data?.gender?.toLowerCase() !== filters.gender.toLowerCase()
-    ) {
-      return false;
+    // filter by location (city or address)
+    if (filters?.location) {
+      const searchLoc = filters.location.trim().toLowerCase();
+      const city = (data?.location?.city || '').toLowerCase();
+      const address = (data?.location?.address || '').toLowerCase();
+      const state = (data?.location?.state || '').toLowerCase();
+
+      if (
+        !city.includes(searchLoc) &&
+        !address.includes(searchLoc) &&
+        !state.includes(searchLoc)
+      ) {
+        return false;
+      }
     }
 
-    // filter by skills/expertise (supports comma-separated specialists e.g. "Cardiologist,General Physician")
+    // filter by gender
+    if (filters?.gender) {
+      const g = filters.gender.toLowerCase();
+      const dg = (data?.gender || '').toLowerCase();
+
+      // Flexible matching for m/male, f/female
+      const isMaleSearch = g === 'm' || g === 'male';
+      const isFemaleSearch = g === 'f' || g === 'female';
+      const isMaleDoctor = dg === 'm' || dg === 'male';
+      const isFemaleDoctor = dg === 'f' || dg === 'female';
+
+      if (isMaleSearch && !isMaleDoctor) return false;
+      if (isFemaleSearch && !isFemaleDoctor) return false;
+      if (!isMaleSearch && !isFemaleSearch && dg !== g) return false;
+    }
+
+    // filter by expertise
     if (filters?.expertise && Array.isArray(data?.expertiseList)) {
       const requestedSpecialists = filters.expertise
         .split(',')
@@ -129,49 +153,50 @@ export class DoctorService {
   async getDoctors(filters?: DoctorFilterDto, userRole: IRole = IRole.ADMIN) {
     const fireStore = this.firebaseService.getFireStore();
 
-    // First, if filtering by service name, get matching service IDs and their creators
-    const matchingDoctorIds = new Set();
-    if (filters?.service) {
-      const servicesSnapshot = await fireStore
-        .collection(this.firebaseService.collections.services)
-        .get();
-
-      servicesSnapshot.docs.forEach((doc) => {
-        const serviceData = doc.data();
-        if (
-          (serviceData?.name?.trim().toLowerCase() || '').includes(
-            filters.service.trim().toLowerCase(),
-          )
-        ) {
-          if (serviceData.createdBy) {
-            matchingDoctorIds.add(serviceData.createdBy);
-          }
-        }
-      });
-
-      // If no services match the filter, return empty array
-      if (matchingDoctorIds.size === 0) {
-        return [];
-      }
-    }
-
     // get doctors
     let doctorRef: any = fireStore.collection(
       this.firebaseService.collections.profiles,
     );
     doctorRef = doctorRef.where('role', '==', IRole.DOCTOR);
 
+    // SERVER-SIDE FILTERING: Expertise (array-contains-any)
+    if (filters?.expertise) {
+      const expertiseArray = filters.expertise
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (expertiseArray.length > 0) {
+        // Firestore limit: array-contains-any max 10 items
+        doctorRef = doctorRef.where(
+          'expertiseList',
+          'array-contains-any',
+          expertiseArray.slice(0, 10),
+        );
+      }
+    }
+
+    // SERVER-SIDE FILTERING: Gender
+    if (filters?.gender) {
+      // Normalize to 'Male' or 'Female' to match Firestore data which is case-sensitive
+      const queryGender =
+        filters.gender.toLowerCase() === 'male'
+          ? 'Male'
+          : filters.gender.toLowerCase() === 'female'
+            ? 'Female'
+            : filters.gender;
+      doctorRef = doctorRef.where('gender', '==', queryGender);
+    }
+
+    // OPTIMIZATION: Apply limit early
+    const maxFetch = filters?.limit ? Math.max(100, +filters.limit * 2) : 500;
+    doctorRef = doctorRef.limit(maxFetch);
+
     const doctorSnapshot = await doctorRef.get();
     const doctorResults = [];
 
-    // Use for...of instead of forEach to handle async operations
     for (const doc of doctorSnapshot.docs) {
       const data = doc.data() as DoctorDto;
-
-      // If filtering by service, skip doctors who don't have matching services
-      if (filters?.service && !matchingDoctorIds.has(doc.id)) {
-        continue;
-      }
+      data.uid = doc.id; // Ensure UID is present for key extractor
 
       if (!this.isFindFilterDoctor(data, filters)) {
         continue;
@@ -181,54 +206,35 @@ export class DoctorService {
         continue;
       }
 
-      // get availability
+      // Normalization
       if (!data?.availability) {
         data.availability = [];
       }
       if (data?.availabilitySlots) {
         try {
-          data.availabilitySlots = JSON.parse(
-            data.availabilitySlots as unknown as string,
-          );
+          if (typeof data.availabilitySlots === 'string') {
+            data.availabilitySlots = JSON.parse(data.availabilitySlots);
+          }
         } catch (error) {
           data.availabilitySlots = [];
         }
       }
 
-      // get ratings
-      if (
-        !data.star_rating &&
-        Array.isArray(data?.ratings) &&
-        data?.ratings?.length
-      ) {
-        const total_ratings = (data?.ratings).reduce((p, c) => +p + +c, 0);
-        data.star_rating = +parseFloat(
-          String(total_ratings / data?.ratings?.length),
-        ).toFixed(2);
-        data.star_rating = data.star_rating > 5 ? 5 : data.star_rating;
-      }
-
+      // Populate basic star rating if missing
       if (!data.star_rating) {
-        data.star_rating = Math.floor(Math.random() * 4);
-        data.ratings = [data.star_rating];
+        if (Array.isArray(data?.ratings) && data?.ratings?.length) {
+          const total_ratings = (data?.ratings).reduce((p, c) => +p + +c, 0);
+          data.star_rating = +parseFloat(
+            String(total_ratings / data?.ratings?.length),
+          ).toFixed(2);
+        } else {
+          data.star_rating = 4.0;
+        }
       }
 
-      // Get services created by this doctor
-      const servicesSnapshot = await fireStore
-        .collection(this.firebaseService.collections.services)
-        .where('createdBy', '==', doc.id)
-        .get();
-
-      data.providingServices = servicesSnapshot.docs.map((serviceDoc) => {
-        const serviceData = serviceDoc.data();
-        return {
-          service_id: serviceData.service_id || serviceDoc.id,
-          name: serviceData.name || '',
-          description: serviceData.description || '',
-          type: serviceData.type || '',
-          price: serviceData.price || 0,
-        };
-      });
+      // NOTE: REMOVED services sub-query for performance.
+      // Services are fetched lazily in getDoctorDetails.
+      data.providingServices = [];
 
       if (userRole !== IRole.ADMIN) {
         delete data?.email;
@@ -241,28 +247,37 @@ export class DoctorService {
     // Sort results by relevance if there's a search query
     if (filters?.search) {
       const searchText = filters.search.trim().toLowerCase();
+      // Clean up search text (remove dr/doctor prefix) for better ranking
+      const cleanSearch = searchText.replace(/^(dr\.?|doctor)\s*/i, '').trim();
+
       doctorResults.sort((a, b) => {
-        const aName = (a?.display_name || '').toLowerCase();
-        const bName = (b?.display_name || '').toLowerCase();
+        const aDisplayName = (a?.display_name || '').toLowerCase();
+        const bDisplayName = (b?.display_name || '').toLowerCase();
+        const aCleanName = aDisplayName.replace(/^(dr\.?|doctor)\s*/i, '').trim();
+        const bCleanName = bDisplayName.replace(/^(dr\.?|doctor)\s*/i, '').trim();
 
-        // Exact matches first
-        if (aName === searchText && bName !== searchText) return -1;
-        if (bName === searchText && aName !== searchText) return 1;
+        // 1. Exact name matches (ignore title)
+        if (aCleanName === cleanSearch && bCleanName !== cleanSearch) return -1;
+        if (bCleanName === cleanSearch && aCleanName !== cleanSearch) return 1;
 
-        // Then starts with
-        if (aName.startsWith(searchText) && !bName.startsWith(searchText))
-          return -1;
-        if (bName.startsWith(searchText) && !aName.startsWith(searchText))
-          return 1;
+        // 2. Prefix name matches
+        if (aCleanName.startsWith(cleanSearch) && !bCleanName.startsWith(cleanSearch)) return -1;
+        if (bCleanName.startsWith(cleanSearch) && !aCleanName.startsWith(cleanSearch)) return 1;
 
-        // Then contains
-        if (aName.includes(searchText) && !bName.includes(searchText))
-          return -1;
-        if (bName.includes(searchText) && !aName.includes(searchText)) return 1;
+        // 3. Match in expertise at word start
+        const aExpertiseMatch = (a?.expertiseList || []).some(ex => ex.toLowerCase().split(/\s+/).some(w => w.startsWith(cleanSearch)));
+        const bExpertiseMatch = (b?.expertiseList || []).some(ex => ex.toLowerCase().split(/\s+/).some(w => w.startsWith(cleanSearch)));
+        if (aExpertiseMatch && !bExpertiseMatch) return -1;
+        if (bExpertiseMatch && !aExpertiseMatch) return 1;
 
-        // Alphabetical order for equal relevance
-        return aName.localeCompare(bName);
+        // 4. Alphabetical by display name
+        return aDisplayName.localeCompare(bDisplayName);
       });
+    } else {
+      // Default: Sort alphabetically by display name
+      doctorResults.sort((a, b) => 
+        (a?.display_name || '').localeCompare(b?.display_name || '')
+      );
     }
 
     if (filters?.limit) {

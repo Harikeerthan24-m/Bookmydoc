@@ -11,18 +11,31 @@ const ExploreScreen = () => {
   const [query, setQuery] = useState({ limit: 50, search: '' });
   const isDefaultView = !query.search && !query.expertise && !query.aiResults;
 
-  const handleSearch = (search) => {
-    if (search?.length > 2) {
-      setQuery((state) => ({
-        ...state,
-        search,
-        expertise: undefined,
-        specialists: undefined,
-        aiResults: undefined,
-      }));
-    } else {
-      setQuery({ limit: 50 });
+  const handleSearch = (filterData) => {
+    // If it's a legacy string search
+    if (typeof filterData === 'string') {
+      if (filterData.length > 2) {
+        setQuery({
+          limit: 50,
+          search: filterData,
+        });
+      } else {
+        setQuery({ limit: 50 });
+      }
+      return;
     }
+
+    // New object-based filter
+    const { search, expertise, location, gender } = filterData;
+
+    setQuery({
+      limit: 50,
+      search: search?.length > 2 ? search : undefined,
+      expertise: expertise || undefined,
+      location: location || undefined,
+      gender: gender || undefined,
+      specialists: expertise ? [expertise] : undefined,
+    });
   };
 
   const handleSpecialistsSelected = (specialistNames, results) => {

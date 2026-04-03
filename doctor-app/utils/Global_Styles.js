@@ -73,4 +73,5 @@ export default {
   Radius,
   Typography,
   Screen,
+  headerShadow,
 };
