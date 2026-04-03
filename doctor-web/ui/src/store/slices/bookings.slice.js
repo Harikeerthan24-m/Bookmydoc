@@ -1,5 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '../api/baseQuery';
+import { apiFetchBaseQuery } from '../api/baseQuery';
 import { toast } from 'react-toastify';
 import {
   ToastSuccessMessage,
@@ -11,7 +11,7 @@ const BookingID = 'BookingID' + Date.now();
 
 export const BookingsSlice = createApi({
   reducerPath: 'bookingsSlice',
-  baseQuery: axiosBaseQuery({
+  baseQuery: apiFetchBaseQuery({
     baseUrl: '',
   }),
   tagTypes: ['Bookings'],

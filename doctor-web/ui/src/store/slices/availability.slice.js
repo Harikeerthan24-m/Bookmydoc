@@ -1,5 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '../api/baseQuery';
+import { apiFetchBaseQuery } from '../api/baseQuery';
 import { toast } from 'react-toastify';
 import {
   ToastSuccessMessage,
@@ -11,7 +11,7 @@ const AvailabilityID = 'AvailabilityID' + Date.now();
 
 export const AvailabilitySlice = createApi({
   reducerPath: 'availabilitySlice',
-  baseQuery: axiosBaseQuery({
+  baseQuery: apiFetchBaseQuery({
     baseUrl: '',
   }),
   tagTypes: ['Availability', 'AvailabilitySlots'],

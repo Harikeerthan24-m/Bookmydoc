@@ -1,2 +1,2 @@
 export { default } from './api';
-export { axiosBaseQuery } from './baseQuery';
+export { apiFetchBaseQuery } from './baseQuery';

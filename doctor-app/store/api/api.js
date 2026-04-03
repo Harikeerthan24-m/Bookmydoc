@@ -1,26 +1,20 @@
 // import { Platform } from 'react-native';
-import axios from 'axios';
 import { APP_ENV, LOCAL_IP, API_PORT, API_BASE_URL } from '@env';
 
 const AppEnv = APP_ENV || 'development';
 const isProduction = AppEnv === 'production';
 
-// In production, use API_BASE_URL from env (set in your build/deploy environment, not committed to the repo).
-// In development, keep using LOCAL_IP and API_PORT from .env for local backend.
+// In production, use API_BASE_URL from env
 const resolvedAppUrl = (() => {
   if (isProduction && API_BASE_URL) {
-    // Normalize to avoid trailing slashes that would break `${APP_URL}/api`
     return API_BASE_URL.replace(/\/+$/, '');
   }
   return `http://${LOCAL_IP}:${API_PORT}`;
 })();
 
 export const APP_URL = resolvedAppUrl;
-
 export const BASE_URL = `${APP_URL}/api`;
 
-// Helpful debug logs to verify where the app is pointing and which base URL is used.
-// This runs once on startup.
 // eslint-disable-next-line no-console
 console.log('[API] Environment:', {
   APP_ENV: AppEnv,
@@ -44,7 +38,7 @@ const ERROR_CODES = {
 
 /**
  * Normalizes API errors into a consistent shape with user-friendly messages.
- * @param {object} error - Axios or API error
+ * @param {object} error - Native or API error
  * @returns {{ statusCode: number, message: string, error: object, data: null }}
  */
 export function normalizeApiError(error) {
@@ -65,7 +59,6 @@ export function normalizeApiError(error) {
   ) {
     const resolvedStatus = serverData.statusCode ?? statusCode;
 
-    // Mask auth/token errors — never expose raw JWT/token messages to the user
     if (
       resolvedStatus === 401 ||
       resolvedStatus === 403 ||
@@ -96,6 +89,7 @@ export function normalizeApiError(error) {
   if (
     code === 'ECONNABORTED' ||
     code === 'ERR_TIMEOUT' ||
+    error.name === 'AbortError' ||
     error.message?.includes('timeout')
   ) {
     console.warn('[API] Request timeout - server did not respond in time');
@@ -111,14 +105,14 @@ export function normalizeApiError(error) {
     };
   }
 
-  if (code === 'ERR_CANCELED' || code === 'AbortError') {
-    console.warn('[API] Request was canceled (e.g. timeout or abort)');
+  if (code === 'ERR_CANCELED' || (error.name === 'AbortError' && !error.isTimeout)) {
+    console.warn('[API] Request was canceled');
     return {
       statusCode: 499,
       message: 'Request was canceled.',
       error: {
         message:
-          'The request was canceled. If this happens during sign up or login, the server may be unreachable—check that the backend is running and the app is using the correct API URL and port.',
+          'The request was canceled. If this happens during sign up or login, the server may be unreachable.',
         code: ERROR_CODES.CANCELED,
       },
       data: null,
@@ -129,7 +123,8 @@ export function normalizeApiError(error) {
     code === 'ERR_NETWORK' ||
     code === 'ECONNREFUSED' ||
     code === 'ECONNRESET' ||
-    error.message === 'Network Error'
+    error.message === 'Network Error' ||
+    error.message?.includes('Failed to fetch')
   ) {
     console.error(
       '[API] Network error - backend may be unreachable:',
@@ -158,45 +153,95 @@ export function normalizeApiError(error) {
   };
 }
 
-const apiClient = axios.create({
-  baseURL: BASE_URL,
-  timeout: DEFAULT_TIMEOUT,
-  timeoutErrorMessage:
-    'Server took too long to respond. Please try again later.',
-  headers: {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-  },
-});
+/**
+ * apiClient - A fetch-based wrapper that mimics the Axios request interface.
+ */
+const apiClient = {
+  request: async (config) => {
+    const {
+      url,
+      method = 'GET',
+      data,
+      headers = {},
+      params,
+      timeout = DEFAULT_TIMEOUT,
+      signal: externalSignal,
+    } = config;
 
-apiClient.interceptors.request.use((config) => {
-  const abortController = new AbortController();
-  const timeoutId = setTimeout(() => {
-    abortController.abort();
-    console.warn(
-      `[API] Request timeout: ${config.method?.toUpperCase()} ${config.url}`,
-    );
-  }, DEFAULT_TIMEOUT);
+    const controller = new AbortController();
+    const signal = externalSignal || controller.signal;
 
-  config.timeoutId = timeoutId;
-  config.signal = abortController.signal;
-  return config;
-});
+    const timeoutId = setTimeout(() => {
+      const timeoutError = new Error('Request timeout');
+      timeoutError.name = 'AbortError';
+      timeoutError.isTimeout = true;
+      controller.abort();
+    }, timeout);
 
-apiClient.interceptors.response.use(
-  (response) => {
-    if (response.config?.timeoutId) {
-      clearTimeout(response.config.timeoutId);
+    try {
+      // Build full URL with params if applicable
+      let fullUrl = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+      if (params && Object.keys(params).length > 0) {
+        const queryStrings = Object.entries(params)
+          .filter(([_, v]) => v != null)
+          .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+          .join('&');
+        if (queryStrings) {
+          fullUrl += (fullUrl.includes('?') ? '&' : '?') + queryStrings;
+        }
+      }
+
+      const response = await fetch(fullUrl, {
+        method,
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: data ? JSON.stringify(data) : undefined,
+        signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      const contentType = response.headers.get('content-type');
+      let responseData = null;
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json().catch(() => null);
+      } else {
+        responseData = await response.text().catch(() => null);
+      }
+
+      if (!response.ok) {
+        const error = new Error(response.statusText || `HTTP ${response.status}`);
+        error.response = {
+          status: response.status,
+          statusText: response.statusText,
+          data: responseData,
+        };
+        throw error;
+      }
+
+      return {
+        data: responseData,
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        config,
+      };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      const normalized = normalizeApiError(error);
+      throw normalized;
     }
-    return response;
   },
-  (error) => {
-    if (error.config?.timeoutId) {
-      clearTimeout(error.config.timeoutId);
-    }
-    const normalized = normalizeApiError(error);
-    return Promise.reject(normalized);
-  },
-);
+
+  get: (url, config = {}) => apiClient.request({ ...config, url, method: 'GET' }),
+  post: (url, data, config = {}) => apiClient.request({ ...config, url, data, method: 'POST' }),
+  put: (url, data, config = {}) => apiClient.request({ ...config, url, data, method: 'PUT' }),
+  patch: (url, data, config = {}) => apiClient.request({ ...config, url, data, method: 'PATCH' }),
+  delete: (url, config = {}) => apiClient.request({ ...config, url, method: 'DELETE' }),
+};
 
 export default apiClient;
+

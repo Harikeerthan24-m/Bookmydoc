@@ -26,8 +26,8 @@ if (!__DEV__) {
 import React, { StrictMode, useEffect, Component } from 'react';
 import { Platform, StatusBar, Text, View } from 'react-native';
 import 'react-native-devsettings';
-import 'react-native-devsettings/withAsyncStorage';
 import 'react-native-gesture-handler';
+import 'react-native-devsettings/withAsyncStorage';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';

@@ -1,9 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '../api/baseQuery';
+import { apiFetchBaseQuery } from '../api/baseQuery';
 
 export const VoiceAssistantSlice = createApi({
   reducerPath: 'VoiceAssistantSlice',
-  baseQuery: axiosBaseQuery({
+  baseQuery: apiFetchBaseQuery({
     baseUrl: '',
   }),
   tagTypes: ['VoiceAssistant'],

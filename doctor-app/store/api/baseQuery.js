@@ -1,7 +1,7 @@
 import apiClient from './api';
 import { refreshAuth } from './../slices/auth.slice';
 
-export const axiosBaseQuery = ({ baseUrl } = { baseUrl: '' }) => {
+export const apiFetchBaseQuery = ({ baseUrl } = { baseUrl: '' }) => {
   return async (
     { url, method, data, params, headers, extraConfig, clientRequest },
     api,
@@ -41,7 +41,7 @@ export const axiosBaseQuery = ({ baseUrl } = { baseUrl: '' }) => {
       };
     } catch (errors) {
       const error = errors;
-      // console.log('axiosBaseQuery', error);
+      // console.log('apiFetchBaseQuery', error);
       if (error?.statusCode === 401 || error?.statusCode === 403) {
         error.message = 'Something went wrong. Please try again.';
         if (error.error) error.error.message = '';

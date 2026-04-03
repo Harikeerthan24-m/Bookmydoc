@@ -23,6 +23,7 @@
     "app:dev-w": "concurrently \"npm run start:dev\" \"npm run start:ui:dev-w\"",
     "start:ui:dev": "npm run start:dev --prefix ui",
     "start:ui:dev-w": "npm run start:dev-w --prefix ui",
+    "voice:agent": "node --import tsx src/voice/agent.ts dev",
     "start:ui": "npm run start --prefix ui",
     "build:ui": "npm run build --prefix ui",
     "build:production": "npm run build:ui && npm run build",
@@ -46,6 +47,8 @@
     "lint:staged": "lint-staged"
   },
   "dependencies": {
+    "@livekit/agents": "^1.2.2",
+    "@livekit/agents-plugin-openai": "^1.2.2",
     "@nestjs/common": "^10.3.9",
     "@nestjs/config": "^3.2.2",
     "@nestjs/core": "^10.3.9",
@@ -60,6 +63,7 @@
     "express": "^4.19.2",
     "firebase-admin": "^12.2.0",
     "form-data": "^4.0.5",
+    "livekit-server-sdk": "^2.15.0",
     "razorpay": "^2.9.5",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
@@ -98,6 +102,7 @@
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.1.3",
     "webpack": "^5.102.0",
     "webpack-cli": "^6.0.1",

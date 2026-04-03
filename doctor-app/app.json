@@ -33,7 +33,9 @@
         {
           "photosPermission": "Book My Doctor accesses your photos to update your profile picture."
         }
-      ]
+      ],
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc"
     ],
     "ios": {
       "buildNumber": "1.0.4",

@@ -1,6 +1,6 @@
 import apiClient from './api';
 
-export const axiosBaseQuery = ({ baseUrl } = { baseUrl: '' }) => {
+export const apiFetchBaseQuery = ({ baseUrl } = { baseUrl: '' }) => {
   return async (
     { url, method, data, params, headers, extraConfig, clientRequest },
     api,
@@ -39,7 +39,7 @@ export const axiosBaseQuery = ({ baseUrl } = { baseUrl: '' }) => {
       };
     } catch (errors) {
       const error = errors;
-      // console.log('axiosBaseQuery', error);
+      // console.log('apiFetchBaseQuery', error);
       if (error?.statusCode === 401) {
         error.message = 'Something was wrong. Try again.';
       }

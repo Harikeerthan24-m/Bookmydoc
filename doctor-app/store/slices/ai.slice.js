@@ -1,10 +1,10 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '../api/baseQuery';
+import { apiFetchBaseQuery } from '../api/baseQuery';
 import { AlertNotification } from '../../components/AlertNotification';
 
 export const AISlice = createApi({
   reducerPath: 'aiSlice',
-  baseQuery: axiosBaseQuery({
+  baseQuery: apiFetchBaseQuery({
     baseUrl: '',
   }),
   tagTypes: ['AIClassification', 'ChatHistory'],
