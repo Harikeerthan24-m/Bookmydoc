@@ -50,18 +50,21 @@ BookmyDoc is a comprehensive doctor appointment booking platform designed for bo
 - **Doctor Availability Management** — Granular control for doctors over their schedules.
 - **Real-time Notifications** — Push notifications (FCM) and web alerts.
 - **Dual Payment Support** — Flexible payment options via Stripe and Razorpay.
-- **Voice-Enabled Features** — Integrated voice recording/consultation capabilities.
-- **AI Triage/Assistant** — AI-driven features for initial patient assessment or assistance.
+- **LiveKit Real-time Voice AI** — Low-latency, full-duplex conversational AI agent (OpenAI Realtime API) that handles symptom triage, queries the DB via tool calls, and passes full transcription history back to the user's Chat interface.
 - **Secure Authentication** — Role-based access control (RBAC) via Firebase roles/claims.
 
 ## Key Decisions
 - **NestJS Architecture** — Chosen for its modularity and scalability compared to plain Express.
 - **Expo for Mobile** — Simplifies development, build (EAS), and cross-platform consistency.
   - *Note*: Uses `expo-dev-client` for native module support (e.g., Firebase, Razorpay).
-- **Package Name Alignment** — Fixed consistency to `com.bookmydoctor` across all Android/Firebase configs.
+- **Voice to Chat Persistence** — Mapped LiveKit's `chatCtx.items` directly against the Firestore chat schema. This completely merges voice-conversations into text-based chat sessions seamlessly.
+- **Optimistic Background Pre-fetching (RTK Query)** — Connected LiveKit WebRTC DataChannel events (e.g., `doctors_found`) to dispatch RTK Query `getChatHistory.initiate({ forceRefetch: true })`. This pre-fetches data while the user is reading notifications, resulting in a 0ms loading sensation when they transition to the Chat tab.
+- **3-Layer Hybrid Testing Strategy** — Since real microphone/WebRTC automation is unreliable, testing is heavily layered: Isolated Jest Unit Tests for UI helpers & Backend Logic, API Integration Tests, and a strict Manual Audio Testing Profile before production runs.
 - **Environment Management** — API URLs configured via `.env` with special handling for Android Emulator host (`10.0.2.2`).
 
 ## Known Issues / Things That Broke Before
+- **LiveKit Agent State Desyncs**: The OpenAI Realtime API occasionally misses emitting the 'listening' state signal through the LiveKit WebSocket. Fixed using a 4-second local UI timeout inside VoiceScreen to forcibly nudge the UI state out of `INITIALIZING`. 
+- **Firestore Schema Strictness**: Trying to read raw `chatCtx.items` from LiveKit crashes Firestore because ToolCall items don't have a `role` field (undefined values are strictly banned). All LiveKit context arrays must heavily filter against `type === 'message'` beforehand.
 - **Android Resource Linking**: Missing `iconBackground` color in `colors.xml` caused build failures.
 - **Firebase Initialization**: Firebase messaging was being called before initialization in `Layout.js`. Moved to component lifecycle.
 - **Package Mismatch**: Android build failed when `build.gradle` namespace didn't match Kotlin file packages (`com.bookmydoctor`).
