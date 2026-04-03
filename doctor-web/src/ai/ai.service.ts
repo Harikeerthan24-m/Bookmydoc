@@ -33,6 +33,15 @@ const MEDICAL_SPECIALISTS = [
   'Rheumatologist',
   'Allergist',
   'Physiotherapist',
+  'Diabetologist',
+  'Neurosurgeon',
+  'Plastic Surgeon',
+  'IVF Specialist',
+  'Ayurveda Specialist',
+  'Homeopathy Specialist',
+  'Radiologist',
+  'Cardiothoracic Surgeon',
+  'Critical Care Specialist',
 ];
 
 @Injectable()

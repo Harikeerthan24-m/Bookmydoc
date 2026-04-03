@@ -5,6 +5,7 @@
   "scripts": {
     "prepare": "husky",
     "prebuild": "expo prebuild --clean",
+    "test": "jest",
     "eas:update": "eas update --clear-cache",
     "build": "eas build -p all --clear-cache",
     "build:android:bundle": "eas build -p android --profile bundle --clear-cache",
@@ -112,7 +113,18 @@
     "husky": "^9.1.6",
     "lint-staged": "^15.2.7",
     "prettier": "^3.3.2",
-    "react-native-devsettings": "^1.0.5"
+    "react-native-devsettings": "^1.0.5",
+    "jest": "^29.7.0",
+    "jest-expo": "~53.0.0",
+    "react-test-renderer": "19.0.0",
+    "@testing-library/react-native": "^13.0.1",
+    "@testing-library/jest-native": "^5.4.3"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
+    ]
   },
   "private": true
 }

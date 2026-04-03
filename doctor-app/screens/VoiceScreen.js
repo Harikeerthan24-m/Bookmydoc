@@ -14,9 +14,10 @@ import {
   Animated,
   Platform,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { AISlice } from '../store/slices/ai.slice';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import {
   LiveKitRoom,
@@ -129,6 +130,17 @@ const VoiceScreen = () => {
   const [error, setError] = useState(null);
   const [connectionDetails, setConnectionDetails] = useState(null);
   const [pendingDoctorCount, setPendingDoctorCount] = useState(0);
+  
+  const dispatch = useDispatch();
+
+  const handleDoctorsFound = useCallback((count) => {
+    setPendingDoctorCount(count);
+    // ⚡ SUPER PRE-FETCH MAGIC: 
+    // InvalidateTags only works if ChatScreen is currently mounted/subscribed.
+    // By dispatching initiate(), we force RTK Query to silently execute the network call in the background RIGHT NOW.
+    // By the time the user taps the notification, the chat history represents 0ms of wait time!
+    dispatch(AISlice.endpoints.getChatHistory.initiate({ limit: 25 }, { forceRefetch: true }));
+  }, [dispatch]);
 
   const [getRealtimeToken, { isLoading: isTokenLoading }] = useGetRealtimeTokenMutation();
 
@@ -293,7 +305,7 @@ const VoiceScreen = () => {
               setVoiceState(VOICE_STATES.IDLE);
             }}
           >
-            <RoomInternals onStateChange={setVoiceState} onDoctorsFound={setPendingDoctorCount} />
+            <RoomInternals onStateChange={setVoiceState} onDoctorsFound={handleDoctorsFound} />
             {voiceOrb}
           </LiveKitRoom>
         ) : (
