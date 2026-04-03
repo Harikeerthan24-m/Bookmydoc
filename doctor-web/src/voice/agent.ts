@@ -24,6 +24,8 @@ function getFirebaseAdmin() {
   return admin;
 }
 
+import { searchDoctorsInFirestore, persistVoiceChatHistory } from './agent.helpers';
+
 const INSTRUCTIONS = `
   You are a professional healthcare assistant for BookMyDoc. 
   Your goal is to help patients triage their symptoms and recommend the right kind of specialist.
@@ -77,81 +79,16 @@ export default defineAgent({
             const db = firebase.firestore();
             
             // 1. Fetch real doctors
-            const snapshot = await db.collection('profiles')
-              .where('role', '==', 'doctor')
-              .where('expertiseList', 'array-contains', specialty)
-              .limit(5)
-              .get();
-              
-            const doctors = snapshot.docs.map(doc => {
-              const d = doc.data();
-              return {
-                doctorId: doc.id,
-                name: d.display_name || 'Doctor',
-                specialization: specialty,
-                location: d.location?.city || 'Remote',
-                rating: d.star_rating || 5,
-              };
-            });
+            const doctors = await searchDoctorsInFirestore(db, specialty);
             const count = doctors.length;
 
             // 2. Identify the user
             const remoteParticipants = Array.from(ctx.room.remoteParticipants.values());
             const userId = remoteParticipants[0]?.identity;
 
-            // 3. Save conversation history locally for ChatScreen to pickup
-              // 3. Save exactly the full conversation history locally for ChatScreen to pickup
+            // 3. Save exactly the full conversation history locally for ChatScreen to pickup
             if (userId) {
-              const sessionRef = db.collection('chatSessions').doc(userId);
-              const messagesRef = sessionRef.collection('messages');
-
-              // Filter out only valid text messages from the AI and User
-              const allMessages = agent.chatCtx.items
-                .filter(m => m.type === 'message' && typeof m.textContent === 'string' && m.textContent.trim().length > 0);
-
-              let lastUserMsg = `I need a ${specialty}.`;
-              
-              // We will reconstruct the timeline exactly to preserve chat ordering
-              let sequenceMillis = Date.now() - (allMessages.length * 1000); 
-
-              for (const m of allMessages) {
-                if (m.role === 'user') lastUserMsg = m.textContent;
-                
-                const msgTime = new Date(sequenceMillis++);
-                const msgId = m.id || `voice-${sequenceMillis}`;
-                
-                const msgData: any = {
-                  role: m.role,
-                  content: m.textContent,
-                  createdAt: firebase.firestore.Timestamp.fromDate(msgTime),
-                };
-                if (m.role === 'user') msgData.inputType = 'voice';
-                if (m.role === 'assistant') msgData.outputType = 'voice';
-                
-                await messagesRef.doc(msgId).set(msgData, { merge: true });
-              }
-
-              // Also persist a "smart" bubble with the Doctor UI cards
-              const finalAsstMsg = `I found ${count} matching doctors for ${specialty}.`;
-              
-              // Ensure session document exists and reflects the latest summary
-              await sessionRef.set({
-                userId,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastMessage: lastUserMsg,
-                lastAssistantMessage: finalAsstMsg,
-              }, { merge: true });
-
-              await messagesRef.add({
-                role: 'assistant',
-                content: finalAsstMsg,
-                meta: {
-                  extractedInfo: { specialty, conversationStage: 'recommending' },
-                  doctorRecommendations: doctors,
-                },
-                outputType: 'voice',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-              });
+              await persistVoiceChatHistory(db, userId, agent.chatCtx.items, specialty, doctors);
             }
             
             try {
