@@ -24,6 +24,7 @@
     "start:ui:dev": "npm run start:dev --prefix ui",
     "start:ui:dev-w": "npm run start:dev-w --prefix ui",
     "voice:agent": "node --import tsx src/voice/agent.ts dev",
+    "start:all": "concurrently \"npm run start:dev\" \"npm run voice:agent\"",
     "start:ui": "npm run start --prefix ui",
     "build:ui": "npm run build --prefix ui",
     "build:production": "npm run build:ui && npm run build",

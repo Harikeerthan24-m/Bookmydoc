@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import {
   useChatMutation,
@@ -91,17 +91,22 @@ const ChatScreen = () => {
   const RATE_LIMIT_MS = 2000;
   const [chatMutation] = useChatMutation();
   const chatHistoryQueryArg = useMemo(() => ({ limit: PAGE_SIZE }), []);
-  const { data: chatHistoryData, isLoading: isLoadingHistory } =
+  const { data: chatHistoryData, isLoading: isLoadingHistory, refetch: refetchHistory } =
     useGetChatHistoryQuery(chatHistoryQueryArg, { skip: !user?.uid });
   const [fetchOlderHistory] = useLazyGetChatHistoryQuery();
   const lastSyncedHistoryRef = useRef(null);
-  const prevLoadingRef = useRef(true);
+
+  // Force refetch from Firestore every time ChatScreen gets focused
+  // This ensures that when returning from VoiceScreen, the AI's transcription is fully loaded!
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.uid) {
+        refetchHistory();
+      }
+    }, [refetchHistory, user?.uid])
+  );
 
   useEffect(() => {
-    const justFinishedLoading = prevLoadingRef.current && !isLoadingHistory;
-    prevLoadingRef.current = isLoadingHistory;
-
-    if (isLoadingHistory) return;
     if (!chatHistoryData) return;
 
     const history = chatHistoryData.conversationHistory || [];
@@ -110,8 +115,8 @@ const ChatScreen = () => {
     const cursor = chatHistoryData.nextCursor ?? null;
     const firstId = msgs[0]?.id;
     const syncKey = `${msgCount}-${cursor}-${firstId}`;
-    if (!justFinishedLoading && lastSyncedHistoryRef.current === syncKey)
-      return;
+    
+    if (lastSyncedHistoryRef.current === syncKey) return;
     lastSyncedHistoryRef.current = syncKey;
 
     setConversationHistory(history);
@@ -127,10 +132,10 @@ const ChatScreen = () => {
     setMessages(uiMessages);
     setNextCursor(cursor);
     const t = setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: false });
+      flatListRef.current?.scrollToEnd({ animated: true });
     }, 150);
     return () => clearTimeout(t);
-  }, [isLoadingHistory]);
+  }, [chatHistoryData]);
 
   const hasMore = nextCursor != null;
 

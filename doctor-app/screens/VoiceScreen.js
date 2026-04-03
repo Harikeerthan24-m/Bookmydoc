@@ -24,8 +24,9 @@ import {
   useVoiceAssistant,
   useConnectionState,
   AudioSession,
+  useRoomContext,
 } from '@livekit/react-native';
-import { ConnectionState } from 'livekit-client';
+import { ConnectionState, RoomEvent } from 'livekit-client';
 import { useGetRealtimeTokenMutation } from '../store/slices/voice.slice';
 
 // Register LiveKit globals (WebRTC polyfills) — must be called once
@@ -34,8 +35,10 @@ registerGlobals();
 const VOICE_STATES = {
   IDLE: 'IDLE',
   CONNECTING: 'CONNECTING',
+  INITIALIZING: 'INITIALIZING',
   LISTENING: 'LISTENING',
   PROCESSING: 'PROCESSING',
+  SEARCHING: 'SEARCHING',
   SPEAKING: 'SPEAKING',
 };
 
@@ -43,28 +46,76 @@ const VOICE_STATES = {
  * Inner component — must be inside <LiveKitRoom>.
  * useVoiceAssistant is the official hook for agent state.
  */
-const RoomInternals = ({ onStateChange }) => {
+const RoomInternals = ({ onStateChange, onDoctorsFound }) => {
+  const room = useRoomContext();
   const connectionState = useConnectionState();
   const { agentState } = useVoiceAssistant();
 
+  // Listen for agent DataPackets (e.g. "I found 3 doctors")
+  useEffect(() => {
+    if (!room) return;
+    
+    const handleData = (payload, participant, kind, topic) => {
+      try {
+        const str = new TextDecoder().decode(payload);
+        const data = JSON.parse(str);
+        
+        if (data.type === 'searching_doctors' || topic === 'searching_doctors') {
+          if (onStateChange) onStateChange(VOICE_STATES.SEARCHING);
+        } else if (data.type === 'doctors_found' || topic === 'doctors_found') {
+          if (onDoctorsFound && data.count > 0) {
+            onDoctorsFound(data.count);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to parse incoming data packet', err);
+      }
+    };
+
+    room.on(RoomEvent.DataReceived, handleData);
+    return () => {
+      room.off(RoomEvent.DataReceived, handleData);
+    };
+  }, [room, onDoctorsFound]);
+
   // Map connection state → voice state
   useEffect(() => {
-    if (connectionState === ConnectionState.Connected) {
-      onStateChange(VOICE_STATES.LISTENING);
-    } else if (connectionState === ConnectionState.Connecting) {
+    if (connectionState === ConnectionState.Connecting) {
       onStateChange(VOICE_STATES.CONNECTING);
+    } else if (connectionState === ConnectionState.Connected) {
+      // Don't set LISTENING yet! Let agentState drive it. But if agentState is empty, default to INITIALIZING
+      if (!agentState || agentState === 'disconnected') {
+        onStateChange(VOICE_STATES.INITIALIZING);
+      }
     } else if (connectionState === ConnectionState.Disconnected) {
       onStateChange(VOICE_STATES.IDLE);
     }
-  }, [connectionState, onStateChange]);
+  }, [connectionState, agentState, onStateChange]);
 
   // Map agent state → voice state
   useEffect(() => {
     if (!agentState) return;
-    if (agentState === 'speaking') onStateChange(VOICE_STATES.SPEAKING);
+    if (agentState === 'disconnected') onStateChange(VOICE_STATES.IDLE);
+    else if (agentState === 'connecting' || agentState === 'initializing') onStateChange(VOICE_STATES.INITIALIZING);
+    else if (agentState === 'speaking') onStateChange(VOICE_STATES.SPEAKING);
     else if (agentState === 'thinking' || agentState === 'processing') onStateChange(VOICE_STATES.PROCESSING);
     else if (agentState === 'listening') onStateChange(VOICE_STATES.LISTENING);
   }, [agentState, onStateChange]);
+
+  // Fallback: OpenAI Realtime models don't always emit 'listening'.
+  // If we're still INITIALIZING after 4s while connected, forcibly move to LISTENING.
+  useEffect(() => {
+    if (connectionState !== ConnectionState.Connected) return;
+
+    const timer = setTimeout(() => {
+      // Nudge only if agent hasn't explicitly said it's doing something else
+      if (!agentState || agentState === 'initializing') {
+        onStateChange(VOICE_STATES.LISTENING);
+      }
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [connectionState, agentState, onStateChange]);
 
   return null; // Audio is handled natively by LiveKit — no UI component needed
 };
@@ -128,7 +179,11 @@ const VoiceScreen = () => {
     scale.setValue(1);
     rotate.setValue(0);
 
-    if (voiceState === VOICE_STATES.IDLE || voiceState === VOICE_STATES.CONNECTING) {
+    if (
+      voiceState === VOICE_STATES.IDLE ||
+      voiceState === VOICE_STATES.CONNECTING ||
+      voiceState === VOICE_STATES.INITIALIZING
+    ) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(scale, { toValue: 1.05, duration: 1600, useNativeDriver: true }),
@@ -142,7 +197,10 @@ const VoiceScreen = () => {
           Animated.timing(scale, { toValue: 1.05, duration: 350, useNativeDriver: true }),
         ]),
       ).start();
-    } else if (voiceState === VOICE_STATES.PROCESSING) {
+    } else if (
+      voiceState === VOICE_STATES.PROCESSING || 
+      voiceState === VOICE_STATES.SEARCHING
+    ) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(scale, { toValue: 1.08, duration: 900, useNativeDriver: true }),
@@ -195,11 +253,13 @@ const VoiceScreen = () => {
   };
 
   const statusLabel = {
-    [VOICE_STATES.IDLE]: 'Tap the mic to start talking',
-    [VOICE_STATES.CONNECTING]: 'Connecting...',
-    [VOICE_STATES.LISTENING]: 'Listening...',
-    [VOICE_STATES.PROCESSING]: 'Processing...',
-    [VOICE_STATES.SPEAKING]: 'AI is speaking...',
+    [VOICE_STATES.IDLE]: '🎙️ Tap the mic to start talking',
+    [VOICE_STATES.CONNECTING]: '🔗 Connecting to Server...',
+    [VOICE_STATES.INITIALIZING]: '⚡ Waking up AI (just a moment)...',
+    [VOICE_STATES.LISTENING]: '👂 I am listening! Go ahead...',
+    [VOICE_STATES.PROCESSING]: '🧠 AI is thinking...',
+    [VOICE_STATES.SEARCHING]: '🔍 Searching hospitals for best doctors...',
+    [VOICE_STATES.SPEAKING]: '🤖 AI is speaking...',
   }[voiceState];
 
   const voiceOrb = (
@@ -233,7 +293,7 @@ const VoiceScreen = () => {
               setVoiceState(VOICE_STATES.IDLE);
             }}
           >
-            <RoomInternals onStateChange={setVoiceState} />
+            <RoomInternals onStateChange={setVoiceState} onDoctorsFound={setPendingDoctorCount} />
             {voiceOrb}
           </LiveKitRoom>
         ) : (
