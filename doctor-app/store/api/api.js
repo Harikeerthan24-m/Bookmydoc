@@ -191,14 +191,21 @@ const apiClient = {
         }
       }
 
+      const isFormData = data instanceof FormData;
+      const requestHeaders = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...headers,
+      };
+
+      if (isFormData) {
+        delete requestHeaders['Content-Type'];
+      }
+
       const response = await fetch(fullUrl, {
         method,
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          ...headers,
-        },
-        body: data ? JSON.stringify(data) : undefined,
+        headers: requestHeaders,
+        body: isFormData ? data : (data ? JSON.stringify(data) : undefined),
         signal,
       });
 
