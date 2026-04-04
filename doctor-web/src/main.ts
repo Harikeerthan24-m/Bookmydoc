@@ -44,9 +44,9 @@ async function bootstrap() {
     }),
   );
 
-  // Get the local IP and port for development from environment
   const localIP = process.env.LOCAL_IP || 'localhost';
   const port = process.env.PORT || '8080';
+  const hostname = '0.0.0.0';
 
   // Log what values are being used for Swagger server in dev
   console.log('[Swagger] ENV values:', {
@@ -54,11 +54,14 @@ async function bootstrap() {
     LOCAL_IP: localIP,
     PORT: port,
     SWAGGER_SERVER: process.env.SWAGGER_SERVER,
+    RENDER_URL: process.env.RENDER_EXTERNAL_URL,
   });
 
   const swaggerApiServer =
     process.env.NODE_ENV === 'production'
-      ? process.env.SWAGGER_SERVER || `https://bookmydoc-k230.onrender.com`
+      ? process.env.SWAGGER_SERVER ||
+        process.env.RENDER_EXTERNAL_URL ||
+        `http://${hostname}:${port}`
       : `http://${localIP}:${port}`;
 
   const swaggerConfig = new DocumentBuilder()
@@ -103,11 +106,10 @@ async function bootstrap() {
     PORT: config.getOrThrow('PORT'),
     HOSTNAME: config.getOrThrow('HOSTNAME'),
     CORS_ENABLED: true,
-    CORS_ORIGIN: process.env.NODE_ENV === 'production' ? 'restricted' : '*',
+    CORS_ORIGIN: '*',
   });
 
   // Always bind to all interfaces (0.0.0.0) to accept connections from network
-  const hostname = '0.0.0.0';
   await app.listen(port, hostname);
 
   console.log(`🚀 [Server] Running on http://${hostname}:${port}`);
