@@ -14,15 +14,8 @@ async function bootstrap() {
     logger: ['log', 'error', 'warn'],
   });
 
-  // Allow all origins in development, restrict in production
   app.enableCors({
-    origin:
-      process.env.NODE_ENV === 'production'
-        ? [
-            'https://bookmydoc-ldrqelklq-harikeerthan-ss-projects.vercel.app',
-            'https://*.vercel.app',
-          ]
-        : true, // Allow all origins in development for mobile app testing
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -65,7 +58,7 @@ async function bootstrap() {
 
   const swaggerApiServer =
     process.env.NODE_ENV === 'production'
-      ? process.env.SWAGGER_SERVER || `http://142.93.179.32:3030`
+      ? process.env.SWAGGER_SERVER || `https://bookmydoc-k230.onrender.com`
       : `http://${localIP}:${port}`;
 
   const swaggerConfig = new DocumentBuilder()
@@ -114,8 +107,7 @@ async function bootstrap() {
   });
 
   // Always bind to all interfaces (0.0.0.0) to accept connections from network
-  const hostname =
-    process.env.NODE_ENV === 'production' ? 'localhost' : '0.0.0.0';
+  const hostname = '0.0.0.0';
   await app.listen(port, hostname);
 
   console.log(`🚀 [Server] Running on http://${hostname}:${port}`);

@@ -1,6 +1,15 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // @ts-nocheck — run by tsx/node --import tsx, NOT compiled by NestJS tsc.
 
-import { JobContext, WorkerOptions, cli, voice, defineAgent, llm } from '@livekit/agents';
+import {
+  JobContext,
+  WorkerOptions,
+  cli,
+  voice,
+  defineAgent,
+  llm,
+} from '@livekit/agents';
 import { z } from 'zod';
 import * as openai from '@livekit/agents-plugin-openai';
 import * as dotenv from 'dotenv';
@@ -24,7 +33,10 @@ function getFirebaseAdmin() {
   return admin;
 }
 
-import { searchDoctorsInFirestore, persistVoiceChatHistory } from './agent.helpers';
+import {
+  searchDoctorsInFirestore,
+  persistVoiceChatHistory,
+} from './agent.helpers';
 
 const INSTRUCTIONS = `
   You are a professional healthcare assistant for BookMyDoc. 
@@ -44,8 +56,6 @@ const INSTRUCTIONS = `
   7. Start by greeting the user warmly and asking how you can help them today.
 `.trim();
 
-
-
 /**
  * LiveKit Voice Agent for BookMyDoc — v1.x API
  *
@@ -63,53 +73,76 @@ export default defineAgent({
       }),
       tools: {
         find_doctors: llm.tool({
-          description: "Search for doctors based on a specialty once you have enough symptoms to recommend one. IMPORTANT: Call this function when you officially recommend a specialist so the UI can show the results.",
+          description:
+            'Search for doctors based on a specialty once you have enough symptoms to recommend one. IMPORTANT: Call this function when you officially recommend a specialist so the UI can show the results.',
           parameters: z.object({
-            specialty: z.string().describe("The requested specialist type, e.g. Cardiologist")
+            specialty: z
+              .string()
+              .describe('The requested specialist type, e.g. Cardiologist'),
           }),
           execute: async ({ specialty }, toolOptions) => {
             try {
-              const searchPayload = JSON.stringify({ type: 'searching_doctors', specialty });
-              await ctx.room.localParticipant.publishData(new TextEncoder().encode(searchPayload), { reliable: true });
+              const searchPayload = JSON.stringify({
+                type: 'searching_doctors',
+                specialty,
+              });
+              await ctx.room.localParticipant.publishData(
+                new TextEncoder().encode(searchPayload),
+                { reliable: true },
+              );
             } catch (err) {
               // ignore
             }
 
             const firebase = getFirebaseAdmin();
             const db = firebase.firestore();
-            
+
             // 1. Fetch real doctors
             const doctors = await searchDoctorsInFirestore(db, specialty);
             const count = doctors.length;
 
             // 2. Identify the user
-            const remoteParticipants = Array.from(ctx.room.remoteParticipants.values());
+            const remoteParticipants = Array.from(
+              ctx.room.remoteParticipants.values(),
+            );
             const userId = remoteParticipants[0]?.identity;
 
             // 3. Save exactly the full conversation history locally for ChatScreen to pickup
             if (userId) {
-              await persistVoiceChatHistory(db, userId, agent.chatCtx.items, specialty, doctors);
+              await persistVoiceChatHistory(
+                db,
+                userId,
+                agent.chatCtx.items,
+                specialty,
+                doctors,
+              );
             }
-            
+
             try {
               // 4. Send Data Channel message to UI (VoiceScreen RoomInternals listener)
-              const payload = JSON.stringify({ type: 'doctors_found', count, specialty });
-              await ctx.room.localParticipant.publishData(new TextEncoder().encode(payload), { reliable: true });
+              const payload = JSON.stringify({
+                type: 'doctors_found',
+                count,
+                specialty,
+              });
+              await ctx.room.localParticipant.publishData(
+                new TextEncoder().encode(payload),
+                { reliable: true },
+              );
             } catch (err) {
               console.error('Failed to notify UI over data channel', err);
             }
-            
+
             return `I found ${count} real doctors in the ${specialty} specialty. Please briefly tell the user to tap the chat notification popup on their screen to see them!`;
-          }
-        })
-      }
+          },
+        }),
+      },
     });
 
     const session = new voice.AgentSession({});
     await session.start({ agent, room: ctx.room });
-  }
+  },
 });
-
 
 // Pass credentials explicitly so they're available even if dotenv timing is off.
 // node --import tsx propagates the loader to child processes via process.execArgv,
