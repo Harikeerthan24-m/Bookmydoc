@@ -946,17 +946,15 @@ Return ONLY valid JSON:
   ): DoctorRecommendationDto[] {
     return doctors.map((doctor) => {
       const specialization = doctor.expertiseList?.[0] || 'General Physician';
-      const location =
-        doctor.location?.city ||
-        doctor.location?.address ||
-        'Location not specified';
 
       return {
         doctorId: doctor.uid || doctor.id,
         name: doctor.display_name || doctor.user_name || 'Dr. Unknown',
         specialization,
         rating: doctor.star_rating || 0,
-        location,
+        location: doctor.location || 'Location not specified',
+        photoUrl: doctor.photoUrl || '',
+        experience: doctor.experience || 'Not specified',
         reason: `Matches your need for ${specialization}${extractedInfo.location ? ` in ${extractedInfo.location}` : ''}`,
       };
     });

@@ -89,7 +89,15 @@ export class DoctorRecommendationDto {
   rating: number;
 
   @ApiProperty({ description: 'Doctor location' })
-  location: string;
+  location: any;
+
+  @ApiPropertyOptional({ description: 'Doctor photo URL' })
+  @IsOptional()
+  photoUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Years of experience' })
+  @IsOptional()
+  experience?: string;
 
   @ApiProperty({ description: 'Reason for recommendation' })
   reason: string;

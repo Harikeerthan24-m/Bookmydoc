@@ -253,15 +253,24 @@ const ChatScreen = () => {
         display_name: doctor?.name,
         star_rating: doctor?.rating,
         expertiseList: doctor?.specialization ? [doctor.specialization] : [],
-        location: { city: doctor?.location },
+        location: doctor?.location,
+        photoUrl: doctor?.photoUrl,
+        experience: doctor?.experience,
       };
+
+      const locationStr = [doctor?.location?.city, doctor?.location?.address]
+        .filter(Boolean)
+        .join(', ');
 
       return (
         <DoctorListCard
           key={doctor?.doctorId || `${doctor?.name}-${doctor?.specialization}`}
           name={doctor?.name}
           subtitle={doctor?.specialization}
-          detail={doctor?.location ? String(doctor.location) : ''}
+          detail={locationStr}
+          photoUrl={doctor?.photoUrl}
+          rating={doctor?.rating}
+          experience={doctor?.experience}
           onPress={() =>
             navigation.navigate('DoctorProfile', { doctor: docForProfile })
           }

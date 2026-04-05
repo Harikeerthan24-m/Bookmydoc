@@ -16,7 +16,15 @@ const { Colors, Spacing, Radius } = Global_Styles;
  *   photoUrl  — optional remote image URI
  *   onPress   — called when card or + button is tapped
  */
-const DoctorListCard = ({ name, subtitle, detail, photoUrl, onPress }) => (
+const DoctorListCard = ({
+  name,
+  subtitle,
+  detail,
+  photoUrl,
+  rating,
+  experience,
+  onPress,
+}) => (
   <TouchableOpacity style={styles.item} activeOpacity={0.8} onPress={onPress}>
     <View style={styles.imageContainer}>
       {photoUrl ? (
@@ -29,6 +37,17 @@ const DoctorListCard = ({ name, subtitle, detail, photoUrl, onPress }) => (
     <View style={styles.textContainer}>
       <Text style={styles.name}>{name}</Text>
       {!!subtitle && <Text style={styles.designation}>{subtitle}</Text>}
+
+      <View style={styles.metaRow}>
+        <View style={styles.metaItem}>
+          <FontAwesome name="star" size={12} color="#FFD700" />
+          <Text style={styles.metaText}>{rating || '4.5'}</Text>
+        </View>
+        <View style={styles.metaItem}>
+          <FontAwesome name="calendar" size={11} color="#666" />
+          <Text style={styles.metaText}>{experience || '5'} yrs</Text>
+        </View>
+      </View>
 
       <View style={styles.bottomRow}>
         {!!detail && (
@@ -115,6 +134,22 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 12,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
   },
 });
 
