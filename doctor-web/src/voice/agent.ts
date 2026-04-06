@@ -2,6 +2,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // @ts-nocheck — run by tsx/node --import tsx, NOT compiled by NestJS tsc.
 
+import { webcrypto } from 'node:crypto';
+if (!globalThis.crypto) {
+  // @ts-ignore
+  globalThis.crypto = webcrypto;
+}
+
 import {
   JobContext,
   WorkerOptions,
