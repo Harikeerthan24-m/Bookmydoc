@@ -153,11 +153,13 @@ export default defineAgent({
 // Pass credentials explicitly so they're available even if dotenv timing is off.
 // node --import tsx propagates the loader to child processes via process.execArgv,
 // so the child can import this TypeScript file directly.
-cli.runApp(
-  new WorkerOptions({
-    agent: __filename,
-    wsURL: process.env.LIVEKIT_URL,
-    apiKey: process.env.LIVEKIT_API_KEY,
-    apiSecret: process.env.LIVEKIT_API_SECRET,
-  }),
-);
+if (require.main === module) {
+  cli.runApp(
+    new WorkerOptions({
+      agent: __filename,
+      wsURL: process.env.LIVEKIT_URL,
+      apiKey: process.env.LIVEKIT_API_KEY,
+      apiSecret: process.env.LIVEKIT_API_SECRET,
+    }),
+  );
+}
