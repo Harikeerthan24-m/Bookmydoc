@@ -155,7 +155,7 @@ export default defineAgent({
 // so the child can import this TypeScript file directly.
 cli.runApp(
   new WorkerOptions({
-    agent: __filename,
+    agent: join(process.cwd(), 'src', 'voice', 'agent.ts'),
     wsURL: process.env.LIVEKIT_URL,
     apiKey: process.env.LIVEKIT_API_KEY,
     apiSecret: process.env.LIVEKIT_API_SECRET,
