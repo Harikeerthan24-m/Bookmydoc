@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BASE_URL } from '../store/api/api';
 import {
   View,
   ScrollView,
@@ -23,12 +24,10 @@ import {
   fetchUserProfile,
   updateUserProfile,
 } from './../store/slices';
-import Loading from '../components/Loading';
 import StickyButton from './../components/explore_components/doctorprofile_components/doctorappointmentbottom/BookAppointmentButton';
 import {
   AlertNotification,
   ALERT_DIALOG,
-  ALERT_WARNING,
   ALERT_DANGER,
   ALERT_TOAST,
   ALERT_SUCCESS,
@@ -80,6 +79,8 @@ const MyProfile = ({ navigation }) => {
   const [showDate, setShowDate] = useState(false);
 
   useEffect(() => {
+    console.log('🔵 [MyProfile] Mounting — fetching user profile...');
+    console.log('🔵 [MyProfile] Resolved BASE_URL:', BASE_URL);
     dispatch(fetchUserProfile());
   }, [dispatch]);
 
@@ -113,7 +114,6 @@ const MyProfile = ({ navigation }) => {
   }, [profile, error, loading]);
 
   const pickImage = async () => {
-    // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
@@ -123,6 +123,12 @@ const MyProfile = ({ navigation }) => {
 
     if (!result.canceled) {
       const file = result?.assets[0];
+      console.log('🖼️ [MyProfile] Image picked:', {
+        uri: file?.uri,
+        type: file?.type,
+        fileName: file?.fileName,
+        fileSize: file?.fileSize,
+      });
       setProfileInfo((state) => ({
         ...state,
         file: {
@@ -136,15 +142,32 @@ const MyProfile = ({ navigation }) => {
   };
 
   const handleSave = async () => {
+    console.log('💾 [MyProfile] handleSave — building FormData...');
+    console.log('💾 [MyProfile] profileInfo snapshot:', {
+      display_name: profileInfo.display_name,
+      phone: profileInfo.phone,
+      height: profileInfo.height,
+      weight: profileInfo.weight,
+      gender: profileInfo.gender,
+      dob: profileInfo.dob,
+      hasFile: !!profileInfo?.file,
+      fileUri: profileInfo?.file?.uri,
+      fileType: profileInfo?.file?.type,
+      fileName: profileInfo?.file?.name,
+    });
+
     const formData = new FormData();
-    formData.append('display_name', String(profileInfo.display_name));
-    formData.append('phone', String(profileInfo.phone));
-    formData.append('height', Number(profileInfo.height ?? 0));
-    formData.append('weight', Number(profileInfo.weight ?? 0));
-    formData.append('gender', String(profileInfo.gender));
-    formData.append('dob', String(profileInfo.dob));
+    // ⚠️ All values must be Strings for React Native's native networking layer.
+    // Passing numbers causes TypeError: Network request failed on Android.
+    formData.append('display_name', String(profileInfo.display_name ?? ''));
+    formData.append('phone', String(profileInfo.phone ?? ''));
+    formData.append('height', String(Number(profileInfo.height ?? 0)));
+    formData.append('weight', String(Number(profileInfo.weight ?? 0)));
+    formData.append('gender', String(profileInfo.gender ?? ''));
+    formData.append('dob', String(profileInfo.dob ?? ''));
 
     if (profileInfo?.file) {
+      console.log('💾 [MyProfile] Appending file to FormData:', profileInfo.file);
       formData.append(
         'file',
         profileInfo?.file,
@@ -152,10 +175,14 @@ const MyProfile = ({ navigation }) => {
       );
     }
 
+    console.log('🌐 [MyProfile] Target URL:', `${BASE_URL}/profile`);
+
     try {
+      console.log('🚀 [MyProfile] Dispatching updateUserProfile...');
       const response = unwrapResult(
         await dispatch(updateUserProfile(formData)),
       );
+      console.log('✅ [MyProfile] updateUserProfile response:', response);
       if (response?.statusCode == 200) {
         AlertNotification({
           title: 'Save Success!',
@@ -165,15 +192,26 @@ const MyProfile = ({ navigation }) => {
         });
       }
     } catch (error) {
-      console.error('Updating profile failed:', error);
-      if (!error?.statusCode) {
-        AlertNotification({
-          title: 'Something was wrong. Try again.',
-          textBody: 'An error occurred while updating your profile.',
-          variant: ALERT_TOAST,
-          type: ALERT_DANGER,
-        });
-      }
+      console.error('❌ [MyProfile] updateUserProfile FAILED');
+      console.error('❌ [MyProfile] Error type:', typeof error);
+      console.error('❌ [MyProfile] Error message:', error?.message);
+      console.error('❌ [MyProfile] Error statusCode:', error?.statusCode);
+      console.error('❌ [MyProfile] Error code:', error?.error?.code);
+      console.error('❌ [MyProfile] Full error object:', JSON.stringify(error, null, 2));
+      // Always show error to user — normalised network errors have statusCode 500,
+      // so the old `if (!error?.statusCode)` guard was silently swallowing them.
+      const errTitle =
+        typeof error?.message === 'string' ? error.message : 'Something went wrong.';
+      const errBody =
+        typeof error?.error?.message === 'string'
+          ? error.error.message
+          : 'An error occurred while updating your profile. Please try again.';
+      AlertNotification({
+        title: errTitle,
+        textBody: errBody,
+        variant: ALERT_TOAST,
+        type: ALERT_DANGER,
+      });
     }
   };
 

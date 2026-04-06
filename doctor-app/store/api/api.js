@@ -199,15 +199,35 @@ const apiClient = {
       };
 
       if (isFormData) {
+        // eslint-disable-next-line no-console
+        console.log('📦 [API] Detected FormData, removing Content-Type to allow boundary auto-generation');
         delete requestHeaders['Content-Type'];
       }
+
+      // eslint-disable-next-line no-console
+      console.log(`🚀 [API] ${method.toUpperCase()} ${fullUrl}`, {
+        hasData: !!data,
+        isFormData,
+        headerCount: Object.keys(requestHeaders).length,
+      });
 
       const response = await fetch(fullUrl, {
         method,
         headers: requestHeaders,
         body: isFormData ? data : (data ? JSON.stringify(data) : undefined),
         signal,
+      }).catch(err => {
+        // eslint-disable-next-line no-console
+        console.error('🔥 [API] NATIVE FETCH CRASHED:', {
+          message: err.message,
+          name: err.name,
+          url: fullUrl
+        });
+        throw err;
       });
+
+      // eslint-disable-next-line no-console
+      console.log(`📥 [API] ${method.toUpperCase()} ${fullUrl} -> ${response.status} ${response.statusText}`);
 
       clearTimeout(timeoutId);
 

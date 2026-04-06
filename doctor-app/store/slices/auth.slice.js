@@ -605,25 +605,28 @@ export const fetchUserProfile = createAsyncThunk(
   'api/profile',
   async (_, thunkAPI) => {
     const state = thunkAPI.getState();
-    const accessToken =
-      state?.authSlice?.user?.accessToken ??
-      state?.authSlice?.user?.stsTokenManager?.accessToken;
-    try {
-      if (accessToken) {
-        const response = await apiClient.request({
-          method: 'get',
-          url: '/profile',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        return response.data;
-      } else {
-        throw new Error('Access token not found.');
-      }
-    } catch (error) {
-      console.error('Failed to fetch user profile:', error);
+      const accessToken =
+        state?.authSlice?.user?.accessToken ??
+        state?.authSlice?.user?.stsTokenManager?.accessToken;
+      console.log('🔄 [SLICE] fetchUserProfile with token:', accessToken?.substring(0, 10));
+      try {
+        if (accessToken) {
+          console.log('🚀 [SLICE] Requesting /profile...');
+          const response = await apiClient.request({
+            method: 'get',
+            url: '/profile',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          console.log('✅ [SLICE] /profile success');
+          return response.data;
+        } else {
+          console.error('❌ [SLICE] Access token not found in state!');
+          throw new Error('Access token not found.');
+        }
+      } catch (error) {
+        console.error('❌ [SLICE] fetchUserProfile FAILED:', error);
       if (error?.data || error?.statusCode) {
         return thunkAPI.rejectWithValue(error);
       } else {
@@ -643,27 +646,30 @@ export const updateUserProfile = createAsyncThunk(
   'api/profileUpdate',
   async (payload, thunkAPI) => {
     const state = thunkAPI.getState();
-    const accessToken =
-      state?.authSlice?.user?.accessToken ??
-      state?.authSlice?.user?.stsTokenManager?.accessToken;
-    try {
-      if (accessToken) {
-        const response = await apiClient.request({
-          method: 'put',
-          url: '/profile',
-          data: payload,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        return response.data;
-      } else {
-        throw new Error('Access token not found.');
-      }
-    } catch (error) {
-      console.error('Failed to fetch user profile:', error);
+      const accessToken =
+        state?.authSlice?.user?.accessToken ??
+        state?.authSlice?.user?.stsTokenManager?.accessToken;
+      console.log('🔄 [SLICE] updateUserProfile with token:', accessToken?.substring(0, 10));
+      try {
+        if (accessToken) {
+          console.log('🚀 [SLICE] Sending PUT /profile...');
+          const response = await apiClient.request({
+            method: 'put',
+            url: '/profile',
+            data: payload,
+            headers: {
+              // ⚠️ Manual Content-Type removed! fetch() auto-adds boundary.
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          console.log('✅ [SLICE] PUT /profile success');
+          return response.data;
+        } else {
+          console.error('❌ [SLICE] Access token not found in state!');
+          throw new Error('Access token not found.');
+        }
+      } catch (error) {
+        console.error('❌ [SLICE] updateUserProfile FAILED:', error);
       if (error?.data || error?.statusCode) {
         return thunkAPI.rejectWithValue(error);
       } else {
