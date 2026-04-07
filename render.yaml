@@ -4,7 +4,7 @@ services:
     env: node
     rootDir: doctor-web
     buildCommand: npm install && npm run build
-    startCommand: npm run start:prod:all
+    startCommand: npm run start:prod
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -20,5 +20,24 @@ services:
       - key: LIVEKIT_API_SECRET
         sync: false
       # OpenAI (for Voice Assistant)
+      - key: OPENAI_API_KEY
+        sync: false
+
+  - type: worker
+    name: bookmydoc-voice-agent
+    env: node
+    rootDir: doctor-web
+    buildCommand: npm install && npm run build
+    startCommand: node dist/voice/agent.js start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
       - key: OPENAI_API_KEY
         sync: false

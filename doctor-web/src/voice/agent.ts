@@ -160,6 +160,7 @@ if (require.main === module) {
       wsURL: process.env.LIVEKIT_URL,
       apiKey: process.env.LIVEKIT_API_KEY,
       apiSecret: process.env.LIVEKIT_API_SECRET,
+      numIdleProcesses: 0, // Prevent memory spike by not pre-warming job processes
     }),
   );
 }
