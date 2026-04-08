@@ -150,10 +150,23 @@ export default defineAgent({
   },
 });
 
+import * as http from 'node:http';
+
 // Pass credentials explicitly so they're available even if dotenv timing is off.
 // node --import tsx propagates the loader to child processes via process.execArgv,
 // so the child can import this TypeScript file directly.
 if (require.main === module) {
+  // Start a dummy HTTP server for Render Free Tier compatibility
+  const port = process.env.PORT || 10000;
+  http
+    .createServer((req, res) => {
+      res.writeHead(200);
+      res.end('Voice Agent is running\n');
+    })
+    .listen(port, '0.0.0.0', () => {
+      console.log(`Dummy HTTP server listening on port ${port}`);
+    });
+
   cli.runApp(
     new WorkerOptions({
       agent: __filename,

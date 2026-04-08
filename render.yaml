@@ -23,12 +23,13 @@ services:
       - key: OPENAI_API_KEY
         sync: false
 
-  - type: worker
+  - type: web
     name: bookmydoc-voice-agent
     env: node
     rootDir: doctor-web
     buildCommand: npm install && npm run build
     startCommand: node dist/voice/agent.js start
+    healthCheckPath: /
     autoDeploy: true
     envVars:
       - key: NODE_ENV
