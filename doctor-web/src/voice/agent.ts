@@ -174,6 +174,8 @@ if (require.main === module) {
       apiKey: process.env.LIVEKIT_API_KEY,
       apiSecret: process.env.LIVEKIT_API_SECRET,
       numIdleProcesses: 0, // Prevent memory spike by not pre-warming job processes
+      initializeProcessTimeout: 120 * 1000, // Increase to 2 minutes for slow Render CPU
+      jobMemoryLimitMB: 450, // Be explicit about memory limit
     }),
   );
 }
