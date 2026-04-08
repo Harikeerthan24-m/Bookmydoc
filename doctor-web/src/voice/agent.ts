@@ -8,6 +8,13 @@ if (!globalThis.crypto) {
   globalThis.crypto = webcrypto;
 }
 
+import * as dns from 'node:dns';
+
+// Force IPv4 first to prevent WebSocket handshake timeouts on cloud providers like Render
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 import {
   JobContext,
   WorkerOptions,
@@ -19,7 +26,6 @@ import {
 import { z } from 'zod';
 import * as openai from '@livekit/agents-plugin-openai';
 import * as dotenv from 'dotenv';
-import { join } from 'path';
 
 // Let dotenv auto-resolve from process.cwd() (which is the doctor-web root)
 dotenv.config();
@@ -64,17 +70,38 @@ const INSTRUCTIONS = `
 
 /**
  * LiveKit Voice Agent for BookMyDoc — v1.x API
- *
- * The default export MUST be an Agent generator object: { entry: async (ctx) => { ... } }.
- * LiveKit provides defineAgent() to construct this object properly.
  */
 export default defineAgent({
   entry: async (ctx: JobContext) => {
     await ctx.connect();
 
+    // Wait for the remote participant to join and publish an audio track
+    // This prevents OpenAI from timing out while waiting for non-existent audio
+    const participant = await ctx.waitForParticipant();
+
+    await new Promise<void>((resolve) => {
+      const checkAudio = () => {
+        for (const pub of participant.trackPublications.values()) {
+          if (pub.kind === 'audio') return true;
+        }
+        return false;
+      };
+
+      if (checkAudio()) {
+        resolve();
+      } else {
+        ctx.room.on('trackPublished', (pub, p) => {
+          if (p.identity === participant.identity && pub.kind === 'audio') {
+            resolve();
+          }
+        });
+      }
+    });
+
     const agent = new voice.Agent({
       instructions: INSTRUCTIONS,
       llm: new openai.realtime.RealtimeModel({
+        apiKey: process.env.OPENAI_API_KEY,
         voice: 'alloy',
       }),
       tools: {
@@ -108,10 +135,7 @@ export default defineAgent({
             const count = doctors.length;
 
             // 2. Identify the user
-            const remoteParticipants = Array.from(
-              ctx.room.remoteParticipants.values(),
-            );
-            const userId = remoteParticipants[0]?.identity;
+            const userId = participant.identity;
 
             // 3. Save exactly the full conversation history locally for ChatScreen to pickup
             if (userId) {
@@ -173,9 +197,9 @@ if (require.main === module) {
       wsURL: process.env.LIVEKIT_URL,
       apiKey: process.env.LIVEKIT_API_KEY,
       apiSecret: process.env.LIVEKIT_API_SECRET,
-      numIdleProcesses: 0, // Prevent memory spike by not pre-warming job processes
-      initializeProcessTimeout: 120 * 1000, // Increase to 2 minutes for slow Render CPU
-      jobMemoryLimitMB: 450, // Be explicit about memory limit
+      numIdleProcesses: 1, // Keep one process warm for faster response as suggested
+      initializeProcessTimeout: 120 * 1000, // Keep this high for Render stability
+      jobMemoryLimitMB: 450,
     }),
   );
 }
