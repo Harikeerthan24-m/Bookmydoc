@@ -131,6 +131,12 @@ export default defineAgent({
 
     const session = new voice.AgentSession({});
     await session.start({ agent, room: ctx.room });
+
+    // Trigger the initial greeting immediately after session starts.
+    // This: (1) tests the TTS pipeline end-to-end on connect, and
+    // (2) lets the user know the agent is ready before they have to speak first.
+    // generateReply() uses the agent's instructions which say "Start by greeting warmly".
+    session.generateReply();
   },
 });
 
