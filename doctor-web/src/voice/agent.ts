@@ -75,27 +75,40 @@ export default defineAgent({
   entry: async (ctx: JobContext) => {
     await ctx.connect();
 
-    // Wait for the remote participant to join and publish an audio track
-    // This prevents OpenAI from timing out while waiting for non-existent audio
+    // Wait for the remote participant to join
     const participant = await ctx.waitForParticipant();
+    console.log(`[Agent] Participant joined: ${participant.identity}`);
 
-    await new Promise<void>((resolve) => {
+    // Wait for the audio track to be subscribed (actually receiving media)
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Audio track subscription timed out (30s)'));
+      }, 30000);
+
       const checkAudio = () => {
         for (const pub of participant.trackPublications.values()) {
-          if (pub.kind === 'audio') return true;
+          if (pub.kind === 'audio' && pub.isSubscribed) return true;
         }
         return false;
       };
 
       if (checkAudio()) {
+        console.log('[Agent] Audio track already subscribed');
+        clearTimeout(timeout);
         resolve();
       } else {
-        ctx.room.on('trackPublished', (pub, p) => {
-          if (p.identity === participant.identity && pub.kind === 'audio') {
+        console.log('[Agent] Waiting for audio track subscription...');
+        ctx.room.on('trackSubscribed', (track, pub, p) => {
+          if (p.identity === participant.identity && track.kind === 'audio') {
+            console.log('[Agent] Audio track subscribed');
+            clearTimeout(timeout);
             resolve();
           }
         });
       }
+    }).catch(err => {
+      console.error(`[Agent] Track wait failed: ${err.message}`);
+      throw err; // Re-throw to fail the job request
     });
 
     const agent = new voice.Agent({
