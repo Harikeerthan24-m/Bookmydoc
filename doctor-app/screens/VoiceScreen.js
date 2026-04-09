@@ -23,12 +23,11 @@ import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import {
   LiveKitRoom,
   registerGlobals,
-  useVoiceAssistant,
   useConnectionState,
   AudioSession,
   useRoomContext,
 } from '@livekit/react-native';
-import { ConnectionState, RoomEvent } from 'livekit-client';
+import { ConnectionState, RoomEvent, TrackEvent } from 'livekit-client';
 import { useGetRealtimeTokenMutation } from '../store/slices/voice.slice';
 
 // Register LiveKit globals (WebRTC polyfills) — must be called once
@@ -51,19 +50,37 @@ const VOICE_STATES = {
 const RoomInternals = ({ onStateChange, onDoctorsFound }) => {
   const room = useRoomContext();
   const connectionState = useConnectionState();
-  const { agentState } = useVoiceAssistant();
+  const agentState = null; // useVoiceAssistant removed — it's a web-only hook
 
-  // Explicitly enable microphone when connected
+  // Debug connection state changes
   useEffect(() => {
-    if (connectionState === ConnectionState.Connected && room) {
-      console.log('[Voice] Forcibly enabling microphone with pre-connect buffer...');
-      room.localParticipant.setMicrophoneEnabled(true, undefined, {
-        preConnectBuffer: true,
-      }).catch(err => 
-        console.error('[Voice] Failed to enable mic:', err)
-      );
-    }
-  }, [connectionState, room]);
+    console.log('[Voice] connectionState:', connectionState, '| agentState:', agentState, '| Room ready:', !!room);
+  }, [connectionState, agentState, room]);
+
+  // Mic is enabled by LiveKitRoom audio={true} on SignalConnected — no manual enableMic needed.
+
+  // Confirm when our audio track actually makes it to the server
+  useEffect(() => {
+    if (!room) return;
+    const handleLocalTrack = async (pub) => {
+      console.log(`[Voice] LOCAL TRACK PUBLISHED: ${pub.kind}`);
+      if (onStateChange) onStateChange(VOICE_STATES.LISTENING);
+
+      // Force speaker AFTER the mic track is published and WebRTC negotiation is done.
+      // Android resets audio routing to earpiece during WebRTC setup even if you called
+      // selectAudioOutput earlier — so this is the correct moment to apply it.
+      if (pub.kind === 'audio') {
+        try {
+          await AudioSession.selectAudioOutput(Platform.OS === 'ios' ? 'force_speaker' : 'speaker');
+          console.log('[Voice] Speaker output forced.');
+        } catch (err) {
+          console.log('[Voice] Could not force speaker:', err);
+        }
+      }
+    };
+    room.localParticipant.on(TrackEvent.LocalTrackPublished, handleLocalTrack);
+    return () => room.localParticipant.off(TrackEvent.LocalTrackPublished, handleLocalTrack);
+  }, [room, onStateChange]);
 
   // Listen for agent DataPackets (e.g. "I found 3 doctors")
   useEffect(() => {
@@ -165,38 +182,26 @@ const VoiceScreen = () => {
     rotate.stopAnimation();
   }, [scale, rotate]);
 
-  // Configure Audio Output to Loudspeaker
+  // Configure audio on mount using the LiveKit communication preset.
+  // This is the officially recommended config for voice/communication apps.
+  // startAudioSession() is called in handleMicPress (before connect) so config
+  // is applied before WebRTC negotiation starts.
   useEffect(() => {
-    const configureAndForceSpeaker = async () => {
-      try {
-        // 1. Configure audio routing preferences
-        await AudioSession.configureAudio({
-          android: {
-            preferredOutputList: ['speaker', 'bluetooth', 'headset', 'earpiece'],
-            audioTypeOptions: {
-              manageAudioFocus: true,
-              audioMode: 'inCommunication',
-              audioFocusMode: 'gain',
-              audioStreamType: 'voiceCall',
-              audioAttributesUsageType: 'voiceCommunication',
-              audioAttributesContentType: 'speech',
-            },
-          },
-          ios: {
-            defaultOutput: 'speaker',
-          },
-        });
-        
-        // 2. Start the session explicitly so we can select the output
-        await AudioSession.startAudioSession();
-        
-        // 3. Force the output to the main speaker
-        await AudioSession.selectAudioOutput(Platform.OS === 'ios' ? 'force_speaker' : 'speaker');
-      } catch (err) {
-        console.log('[Voice] Audio Config Error:', err);
-      }
-    };
-    configureAndForceSpeaker();
+    AudioSession.configureAudio({
+      android: {
+        audioTypeOptions: {
+          manageAudioFocus: true,
+          audioMode: 'inCommunication',
+          audioFocusMode: 'gain',
+          audioStreamType: 'voiceCall',
+          audioAttributesUsageType: 'voiceCommunication',
+          audioAttributesContentType: 'speech',
+        },
+      },
+      ios: {
+        defaultOutput: 'speaker',
+      },
+    }).catch(err => console.log('[Voice] Audio config error:', err));
   }, []);
 
   useEffect(() => {
@@ -286,10 +291,21 @@ const VoiceScreen = () => {
           return;
         }
       }
+      // Start audio session BEFORE connecting — LiveKit docs require this order:
+      // configureAudio → startAudioSession → connect → setMicrophoneEnabled
+      // Starting after connect means WebRTC negotiates without a live audio session,
+      // causing the mic to capture in an uninitialized state (silence).
+      try {
+        await AudioSession.startAudioSession();
+        console.log('[Voice] Audio session started (pre-connect).');
+      } catch (err) {
+        console.warn('[Voice] startAudioSession pre-connect failed:', err);
+      }
       startConnection();
     } else {
       setConnectionDetails(null);
       setVoiceState(VOICE_STATES.IDLE);
+      AudioSession.stopAudioSession().catch(() => {});
     }
   };
 
@@ -332,6 +348,10 @@ const VoiceScreen = () => {
             onDisconnected={() => {
               setConnectionDetails(null);
               setVoiceState(VOICE_STATES.IDLE);
+              // Stop the audio session so it doesn't leak into the next connection.
+              // LiveKit starts the session when the mic is enabled; we must stop it
+              // explicitly to allow clean state on reconnect.
+              AudioSession.stopAudioSession().catch(() => {});
             }}
           >
             <RoomInternals onStateChange={setVoiceState} onDoctorsFound={handleDoctorsFound} />

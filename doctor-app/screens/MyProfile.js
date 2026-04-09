@@ -133,8 +133,8 @@ const MyProfile = ({ navigation }) => {
         ...state,
         file: {
           uri: file?.uri,
-          type: file?.type,
-          name: file?.fileName ?? profile?.uid,
+          mimeType: file?.mimeType,   // e.g. "image/jpeg" — ImagePicker v14+
+          fileName: file?.fileName,
         },
         photoUrl: file?.uri,
       }));
@@ -167,12 +167,15 @@ const MyProfile = ({ navigation }) => {
     formData.append('dob', String(profileInfo.dob ?? ''));
 
     if (profileInfo?.file) {
-      console.log('💾 [MyProfile] Appending file to FormData:', profileInfo.file);
-      formData.append(
-        'file',
-        profileInfo?.file,
-        profileInfo?.file?.fileName ?? profile?.uid,
-      );
+      const f = profileInfo.file;
+      // React Native FormData requires { uri, type, name } as a single object (2-arg form).
+      // expo-image-picker returns type:"image" (not a MIME type) — derive from mimeType or URI.
+      const ext = (f.uri ?? '').split('.').pop()?.toLowerCase() ?? 'jpg';
+      const mimeType = f.mimeType ?? (ext === 'png' ? 'image/png' : 'image/jpeg');
+      const fileName = f.name || f.fileName || `photo.${ext}`;
+      const filePayload = { uri: f.uri, type: mimeType, name: fileName };
+      console.log('💾 [MyProfile] Appending file to FormData:', filePayload);
+      formData.append('file', filePayload);
     }
 
     console.log('🌐 [MyProfile] Target URL:', `${BASE_URL}/profile`);

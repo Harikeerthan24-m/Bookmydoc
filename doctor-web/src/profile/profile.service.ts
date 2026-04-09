@@ -4,6 +4,7 @@ import { FirebaseService } from '../firebase/firebase.service';
 import { ProfileDto } from './dto/profile.dto';
 import { IApiResponse, IUnsafeObject } from '@common/types';
 import { classToPlain } from 'class-transformer';
+import { v4 as uuidv4 } from 'uuid';
 
 interface IMulterFile {
   fieldname: string;
@@ -107,24 +108,26 @@ export class ProfileService {
       let photoUrl = profileDto?.photoUrl;
 
       if (file && file !== undefined) {
-        // Uplaoding image to firestore's root bucket..
+        // Upload image to Firebase Storage bucket
         const bucket = this.firebaseService.getStorage().bucket();
         const fileName = `${userId}/${Date.now()}-${file.originalname}`;
         const fileUpload = bucket.file(fileName);
 
+        // Use a Firebase download token embedded in file metadata.
+        // This produces a stable public URL (same as what the client SDK's getDownloadURL() returns)
+        // and avoids the need for iam.serviceAccounts.signBlob permission required by getSignedUrl().
+        const downloadToken = uuidv4();
+
         await fileUpload.save(file.buffer, {
           metadata: {
             contentType: file.mimetype,
+            metadata: {
+              firebaseStorageDownloadTokens: downloadToken,
+            },
           },
         });
 
-        // photoUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
-        const [downloadURL] = await fileUpload.getSignedUrl({
-          action: 'read',
-          expires: '03-09-3000',
-        });
-
-        photoUrl = downloadURL;
+        photoUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media&token=${downloadToken}`;
       }
 
       let updatedProfile = { ...profileDto };

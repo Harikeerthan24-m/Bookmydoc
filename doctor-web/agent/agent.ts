@@ -66,7 +66,10 @@ const INSTRUCTIONS = `
  */
 export default defineAgent({
   entry: async (ctx: JobContext) => {
-    await ctx.connect(undefined, { autoSubscribe: true });
+    // Default autoSubscribe = 0 (SUBSCRIBE_ALL) — do NOT pass { autoSubscribe: true }.
+    // Passing an object breaks the numeric enum check and connects with autoSubscribe:false,
+    // causing the room to never subscribe to participant tracks.
+    await ctx.connect();
 
     const participant = await ctx.waitForParticipant();
     console.log(`[Agent] Ready for ${participant.identity}`);
@@ -118,9 +121,16 @@ export default defineAgent({
     });
 
     const session = new voice.AgentSession({});
-    await session.start({ agent, room: ctx.room });
+    // inputOptions.audioEnabled: true is REQUIRED — autoSubscribe on ctx.connect() only
+    // affects the room client, not AgentSession's RoomIO media bridge. Without this,
+    // the agent never subscribes to the participant's mic track (subscribed: false).
+    await session.start({
+      agent,
+      room: ctx.room,
+      inputOptions: { audioEnabled: true },
+    });
 
-    // Trigger initial greeting immediately after session starts.
+    // Trigger initial greeting after session is listening.
     session.generateReply();
   },
 });
