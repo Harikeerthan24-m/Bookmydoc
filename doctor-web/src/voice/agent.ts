@@ -73,43 +73,12 @@ const INSTRUCTIONS = `
  */
 export default defineAgent({
   entry: async (ctx: JobContext) => {
-    await ctx.connect();
+    // Join with auto-subscribe to receive audio immediately
+    await ctx.connect(undefined, { autoSubscribe: true });
 
-    // Wait for the remote participant to join
+    // Wait for the user to be present
     const participant = await ctx.waitForParticipant();
-    console.log(`[Agent] Participant joined: ${participant.identity}`);
-
-    // Wait for the audio track to be subscribed (actually receiving media)
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Audio track subscription timed out (30s)'));
-      }, 30000);
-
-      const checkAudio = () => {
-        for (const pub of participant.trackPublications.values()) {
-          if (pub.kind === 'audio' && pub.isSubscribed) return true;
-        }
-        return false;
-      };
-
-      if (checkAudio()) {
-        console.log('[Agent] Audio track already subscribed');
-        clearTimeout(timeout);
-        resolve();
-      } else {
-        console.log('[Agent] Waiting for audio track subscription...');
-        ctx.room.on('trackSubscribed', (track, pub, p) => {
-          if (p.identity === participant.identity && track.kind === 'audio') {
-            console.log('[Agent] Audio track subscribed');
-            clearTimeout(timeout);
-            resolve();
-          }
-        });
-      }
-    }).catch(err => {
-      console.error(`[Agent] Track wait failed: ${err.message}`);
-      throw err; // Re-throw to fail the job request
-    });
+    console.log(`[Agent] Ready for ${participant.identity}`);
 
     const agent = new voice.Agent({
       instructions: INSTRUCTIONS,
@@ -120,63 +89,41 @@ export default defineAgent({
       tools: {
         find_doctors: llm.tool({
           description:
-            'Search for doctors based on a specialty once you have enough symptoms to recommend one. IMPORTANT: Call this function when you officially recommend a specialist so the UI can show the results.',
+            'Search for doctors based on a specialty once you have enough symptoms to recommend one.',
           parameters: z.object({
             specialty: z
               .string()
               .describe('The requested specialist type, e.g. Cardiologist'),
           }),
-          execute: async ({ specialty }, toolOptions) => {
-            try {
-              const searchPayload = JSON.stringify({
-                type: 'searching_doctors',
-                specialty,
-              });
-              await ctx.room.localParticipant.publishData(
-                new TextEncoder().encode(searchPayload),
-                { reliable: true },
-              );
-            } catch (err) {
-              // ignore
-            }
-
+          execute: async ({ specialty }) => {
             const firebase = getFirebaseAdmin();
             const db = firebase.firestore();
 
-            // 1. Fetch real doctors
             const doctors = await searchDoctorsInFirestore(db, specialty);
             const count = doctors.length;
 
-            // 2. Identify the user
-            const userId = participant.identity;
-
-            // 3. Save exactly the full conversation history locally for ChatScreen to pickup
-            if (userId) {
+            if (participant.identity) {
               await persistVoiceChatHistory(
                 db,
-                userId,
+                participant.identity,
                 agent.chatCtx.items,
                 specialty,
                 doctors,
               );
             }
 
-            try {
-              // 4. Send Data Channel message to UI (VoiceScreen RoomInternals listener)
-              const payload = JSON.stringify({
-                type: 'doctors_found',
-                count,
-                specialty,
-              });
-              await ctx.room.localParticipant.publishData(
-                new TextEncoder().encode(payload),
-                { reliable: true },
-              );
-            } catch (err) {
-              console.error('Failed to notify UI over data channel', err);
-            }
+            // Notify UI
+            const payload = JSON.stringify({
+              type: 'doctors_found',
+              count,
+              specialty,
+            });
+            await ctx.room.localParticipant.publishData(
+              new TextEncoder().encode(payload),
+              { reliable: true },
+            );
 
-            return `I found ${count} real doctors in the ${specialty} specialty. Please briefly tell the user to tap the chat notification popup on their screen to see them!`;
+            return `I found ${count} doctors in ${specialty}. Tell the user to check their screen!`;
           },
         }),
       },
@@ -189,20 +136,15 @@ export default defineAgent({
 
 import * as http from 'node:http';
 
-// Pass credentials explicitly so they're available even if dotenv timing is off.
-// node --import tsx propagates the loader to child processes via process.execArgv,
-// so the child can import this TypeScript file directly.
 if (require.main === module) {
-  // Start a dummy HTTP server for Render Free Tier compatibility
+  // Start dummy HTTP server for Render health checks
   const port = process.env.PORT || 10000;
   http
     .createServer((req, res) => {
       res.writeHead(200);
-      res.end('Voice Agent is running\n');
+      res.end('OK\n');
     })
-    .listen(port, '0.0.0.0', () => {
-      console.log(`Dummy HTTP server listening on port ${port}`);
-    });
+    .listen(port, '0.0.0.0');
 
   cli.runApp(
     new WorkerOptions({
@@ -210,8 +152,8 @@ if (require.main === module) {
       wsURL: process.env.LIVEKIT_URL,
       apiKey: process.env.LIVEKIT_API_KEY,
       apiSecret: process.env.LIVEKIT_API_SECRET,
-      numIdleProcesses: 1, // Keep one process warm for faster response as suggested
-      initializeProcessTimeout: 120 * 1000, // Keep this high for Render stability
+      numIdleProcesses: 1, // Keep 1 process warm
+      initializeProcessTimeout: 60 * 1000,
       jobMemoryLimitMB: 450,
     }),
   );

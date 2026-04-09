@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
   Animated,
   Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -51,6 +52,18 @@ const RoomInternals = ({ onStateChange, onDoctorsFound }) => {
   const room = useRoomContext();
   const connectionState = useConnectionState();
   const { agentState } = useVoiceAssistant();
+
+  // Explicitly enable microphone when connected
+  useEffect(() => {
+    if (connectionState === ConnectionState.Connected && room) {
+      console.log('[Voice] Forcibly enabling microphone with pre-connect buffer...');
+      room.localParticipant.setMicrophoneEnabled(true, undefined, {
+        preConnectBuffer: true,
+      }).catch(err => 
+        console.error('[Voice] Failed to enable mic:', err)
+      );
+    }
+  }, [connectionState, room]);
 
   // Listen for agent DataPackets (e.g. "I found 3 doctors")
   useEffect(() => {
@@ -255,8 +268,24 @@ const VoiceScreen = () => {
     }
   };
 
-  const handleMicPress = () => {
+  const handleMicPress = async () => {
     if (voiceState === VOICE_STATES.IDLE) {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: 'Microphone Permission',
+            message: 'Book My Doctor needs access to your microphone so you can talk to the AI assistant.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          setError('Microphone permission denied.');
+          return;
+        }
+      }
       startConnection();
     } else {
       setConnectionDetails(null);
