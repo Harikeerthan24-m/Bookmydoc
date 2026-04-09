@@ -282,7 +282,10 @@ const MyProfile = ({ navigation }) => {
         </View>
         <View style={styles.profileContainer}>
           {profileInfo?.photoUrl ? (
-            <Image style={styles.profileImage} src={profileInfo?.photoUrl} />
+            <Image
+              style={styles.profileImage}
+              source={{ uri: profileInfo?.photoUrl }}
+            />
           ) : (
             <Ionicons
               style={[styles.profileImage, { borderWidth: 0, marginBottom: 0 }]}

@@ -167,7 +167,7 @@ export class ProfileService {
       }
 
       // Auto-calculate BMI if height and weight are provided
-      if (profileDto.height && profileDto.weight) {
+      if (profileDto.height && profileDto.weight && profileDto.height > 0) {
         // BMI = weight(kg) / height(m)^2
         const heightInMeters = profileDto.height / 100; // Convert cm to meters
         updatedProfile.bmi = Number(
@@ -177,6 +177,18 @@ export class ProfileService {
 
       // Converted JavaScript Object to Plain Object for Firebase Firestore capable..
       const updatedProfilePlain = classToPlain(updatedProfile);
+
+      // SANITIZE: Remove undefined/NaN values and empty strings for sensitive fields
+      // Firestore will crash if it sees undefined or NaN.
+      Object.keys(updatedProfilePlain).forEach((key) => {
+        if (
+          updatedProfilePlain[key] === undefined ||
+          (typeof updatedProfilePlain[key] === 'number' &&
+            isNaN(updatedProfilePlain[key]))
+        ) {
+          delete updatedProfilePlain[key];
+        }
+      });
 
       if (
         profileDto?.notification_tokens &&
@@ -189,6 +201,7 @@ export class ProfileService {
         delete updatedProfilePlain?.notification_tokens;
       }
 
+      console.log(`💾 [Profile] Updating Firestore for user ${userId}...`);
       await this.firebaseService
         .getFirestore()
         .collection('profiles')

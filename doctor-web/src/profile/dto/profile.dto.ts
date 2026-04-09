@@ -155,12 +155,14 @@ export class ProfileDto {
   })
   location?: AddressDto;
 
-  @IsDecimal()
+  @Type(() => Number)
+  @IsNumber()
   @IsOptional()
   @ApiPropertyOptional({ description: 'Height of the profile' })
   height?: number;
 
-  @IsDecimal()
+  @Type(() => Number)
+  @IsNumber()
   @IsOptional()
   @ApiPropertyOptional({ description: 'Weight of the profile' })
   weight?: number;
