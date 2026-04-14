@@ -7,6 +7,9 @@ export const API_BASE_URL = (() => {
   }
 
   // For production, try environment variable first, then fallback to relative URL for same-origin deployment
+  if (process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
