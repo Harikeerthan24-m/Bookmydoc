@@ -41,11 +41,11 @@ const DoctorListCard = ({
       <View style={styles.metaRow}>
         <View style={styles.metaItem}>
           <FontAwesome name="star" size={12} color="#FFD700" />
-          <Text style={styles.metaText}>{rating || '4.5'}</Text>
+          <Text style={styles.metaText}>{rating || '0.0'}</Text>
         </View>
         <View style={styles.metaItem}>
           <FontAwesome name="calendar" size={11} color="#666" />
-          <Text style={styles.metaText}>{experience || '5'} yrs</Text>
+          <Text style={styles.metaText}>{experience || '0'} yrs</Text>
         </View>
       </View>
 

@@ -39,7 +39,7 @@ const FeesInformation = ({ services }) => {
               </Text>
             </View>
             <Text style={[styles.amount, isActive && styles.active]}>
-              ${item?.price_amount}
+              ₹{item?.price}
             </Text>
           </TouchableOpacity>
         );

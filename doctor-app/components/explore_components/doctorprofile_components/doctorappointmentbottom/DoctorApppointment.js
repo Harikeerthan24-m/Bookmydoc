@@ -92,6 +92,11 @@ const DoctorAppointment = ({
           : Object.values(availableSlots),
         slotDates: slotDates,
       });
+
+      // Auto-select first service if available
+      if (doctor?.providingServices?.length > 0 && !booking?.service) {
+        dispatch(setBooking({ service: doctor.providingServices[0] }));
+      }
     }
 
     return () => dispatch(setBooking({ reset: true }));
@@ -240,25 +245,30 @@ const DoctorAppointment = ({
         />
 
         {(slotData?.slotsData || []).map((slotItem, index) => {
+          if (!slotItem?.slots?.length) return null;
           return (
-            <View key={'day_part' + index}>
-              <Text style={styles.slotsText}>
-                {slotItem?.day_part || slotItem?.day_name} Slots
-              </Text>
-              <View style={styles.timeSlotsContainer}>
-                {slotItem?.slots.map((slot, index) => {
+            <View key={'day_part' + index} style={styles.slotGroup}>
+              <View style={styles.slotGroupHeader}>
+                <Ionicons 
+                  name={slotItem.day_part === 'Morning' ? 'sunny-outline' : 'moon-outline'} 
+                  size={18} 
+                  color={Global_Styles.PrimaryColour} 
+                />
+                <Text style={styles.dayPartText}> {slotItem?.day_part} Slots</Text>
+              </View>
+              <View style={styles.timeSlotsGrid}>
+                {slotItem?.slots.map((slot, sIdx) => {
                   const isActive = booking?.slot?.slot_id === slot?.slot_id;
                   return (
                     <TouchableOpacity
-                      key={'slot' + index}
-                      style={[styles.timeSlotItem, isActive && styles.active]}
+                      key={'slot' + sIdx}
+                      style={[styles.timeSlotChip, isActive && styles.activeChip]}
                       onPress={() => dispatch(setBooking({ slot }))}
                     >
                       <Text
-                        style={[styles.timeSlotText, isActive && styles.active]}
+                        style={[styles.timeSlotChipText, isActive && styles.activeChipText]}
                       >
-                        {formatTime(slot?.start_time)} -{' '}
-                        {formatTime(slot?.end_time)}
+                        {formatTime(slot?.start_time)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -343,26 +353,53 @@ const styles = StyleSheet.create({
   },
   slotsText: {
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: '700',
     textAlign: 'left',
+    marginTop: 25,
+    color: '#333',
+  },
+  slotGroup: {
     marginTop: 20,
   },
-  timeSlotsContainer: {
+  slotGroupHeader: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    marginHorizontal: 5,
-    marginTop: 5,
-  },
-  timeSlotItem: {
-    width: 'auto',
-    margin: 5,
-    padding: 10,
-    backgroundColor: '#eee',
-    borderRadius: 5,
     alignItems: 'center',
+    marginBottom: 10,
   },
-  timeSlotText: {
-    fontSize: 12,
+  dayPartText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#666',
+  },
+  timeSlotsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  timeSlotChip: {
+    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginRight: 10,
+    marginBottom: 10,
+    minWidth: 80,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  activeChip: {
+    backgroundColor: '#18A0FB',
+    borderColor: '#18A0FB',
+  },
+  timeSlotChipText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  activeChipText: {
+    color: 'white',
+    fontWeight: '700',
   },
 });
 

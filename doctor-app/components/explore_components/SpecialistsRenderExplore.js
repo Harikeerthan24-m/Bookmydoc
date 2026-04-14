@@ -72,6 +72,8 @@ const SpecialistsRenderExplore = ({ query, setQuery }) => {
       subtitle={item?.expertiseList?.join(', ') || item?.title}
       detail={availabilityFormat(item?.availability)}
       photoUrl={item?.photoUrl}
+      rating={item?.star_rating}
+      experience={item?.experience}
       onPress={() => navigation.navigate('DoctorProfile', { doctor: item })}
     />
   );

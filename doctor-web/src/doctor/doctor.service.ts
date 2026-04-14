@@ -37,18 +37,19 @@ export class DoctorService {
       }
     }
 
-    // filter by location (city or address)
+    // filter by location (city, address, or top-level field)
     if (filters?.location) {
       const searchLoc = filters.location.trim().toLowerCase();
-      const city = (data?.location?.city || '').toLowerCase();
-      const address = (data?.location?.address || '').toLowerCase();
-      const state = (data?.location?.state || '').toLowerCase();
+      const locationField = data?.location;
+      
+      let locationText = '';
+      if (typeof locationField === 'string') {
+        locationText = locationField.toLowerCase();
+      } else if (typeof locationField === 'object' && locationField !== null) {
+        locationText = `${locationField.city || ''} ${locationField.address || ''} ${locationField.state || ''}`.toLowerCase();
+      }
 
-      if (
-        !city.includes(searchLoc) &&
-        !address.includes(searchLoc) &&
-        !state.includes(searchLoc)
-      ) {
+      if (!locationText.includes(searchLoc)) {
         return false;
       }
     }
@@ -145,6 +146,18 @@ export class DoctorService {
       if (hasSpecialization) {
         return true;
       }
+    }
+
+    // Search in location
+    const locationField = data?.location;
+    let locationText = '';
+    if (typeof locationField === 'string') {
+      locationText = locationField.toLowerCase();
+    } else if (typeof locationField === 'object' && locationField !== null) {
+      locationText = `${locationField.city || ''} ${locationField.address || ''} ${locationField.state || ''}`.toLowerCase();
+    }
+    if (locationText.includes(cleanSearchText)) {
+      return true;
     }
 
     return false;
