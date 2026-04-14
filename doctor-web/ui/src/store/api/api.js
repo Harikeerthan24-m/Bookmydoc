@@ -2,11 +2,7 @@ const { NODE_ENV } = process.env;
 
 // More robust API URL configuration
 export const API_BASE_URL = (() => {
-  if (NODE_ENV === 'development') {
-    return 'http://localhost:8080/';
-  }
-
-  // For production, try environment variable first, then fallback to relative URL for same-origin deployment
+  // 1. Always prioritize explicit environment variable for the API
   if (process.env.REACT_APP_API_BASE_URL) {
     return process.env.REACT_APP_API_BASE_URL;
   }
@@ -14,7 +10,12 @@ export const API_BASE_URL = (() => {
     return process.env.REACT_APP_API_URL;
   }
 
-  // For same-origin deployment (like Vercel or Docker), use relative URL
+  // 2. Fallback to local development if in dev mode
+  if (NODE_ENV === 'development') {
+    return 'http://localhost:8080/';
+  }
+
+  // 3. For same-origin deployment (e.g. Vercel), use relative URL
   if (typeof window !== 'undefined') {
     return `${window.location.origin}/`;
   }

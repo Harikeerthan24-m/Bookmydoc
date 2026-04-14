@@ -177,18 +177,45 @@ const Availability = () => {
     });
   };
 
-  const handleCloneSlot = (dayKey, slotIndex) => {
+  const handleCopyToAllDays = (e, sourceDayKey) => {
+    if (e) e.preventDefault();
+    
+    const sourceSlots = availability[sourceDayKey].timeSlots;
+    if (!sourceSlots || sourceSlots.length === 0) {
+      ToastMessage({
+        title: 'Empty Schedule',
+        message: 'Add at least one time slot before copying.',
+        options: { type: 'warning' },
+      });
+      return;
+    }
+
     setAvailability((prev) => {
       const updatedAvailability = { ...prev };
-      const clonedSlot = {
-        ...updatedAvailability[dayKey].timeSlots[slotIndex],
-      };
-      updatedAvailability[dayKey].timeSlots.splice(
-        slotIndex + 1,
-        0,
-        clonedSlot,
-      );
-      return { ...updatedAvailability };
+      const dayName = prev[sourceDayKey].day;
+      
+      Object.keys(updatedAvailability).forEach((dayKey) => {
+        updatedAvailability[dayKey] = {
+          ...updatedAvailability[dayKey],
+          enabled: true,
+          // Deep copy and update day, remove IDs so they are treated as new on save
+          timeSlots: sourceSlots.map((slot) => {
+            const { slot_id, id, ...rest } = slot;
+            return { 
+              ...rest, 
+              day: dayKey 
+            };
+          }),
+        };
+      });
+      
+      return updatedAvailability;
+    });
+
+    ToastMessage({
+      title: 'Schedule Copied',
+      message: `Timings from ${availability[sourceDayKey].day} applied to all days.`,
+      options: { type: 'success' },
     });
   };
 
@@ -226,6 +253,7 @@ const Availability = () => {
             </p>
           </div>
           <button
+            type="button"
             className="av-save-btn"
             onClick={handleSave}
             disabled={saveAvailabilitySlotsResult?.isLoading}
@@ -273,6 +301,7 @@ const Availability = () => {
             return (
               <button
                 key={dayKey}
+                type="button"
                 className={`av-week-dot ${day.enabled ? 'active' : ''}`}
                 onClick={() => handleToggle(dayKey)}
                 title={`Toggle ${day.day}`}
@@ -410,9 +439,10 @@ const Availability = () => {
 
                           <div className="av-slot-actions">
                             <button
+                              type="button"
                               className="av-icon-btn av-clone-btn"
-                              onClick={() => handleCloneSlot(dayKey, slotIndex)}
-                              title="Duplicate"
+                              onClick={(e) => handleCopyToAllDays(e, dayKey)}
+                              title="Apply to all days"
                             >
                               <FaClone />
                             </button>
@@ -431,6 +461,7 @@ const Availability = () => {
                     </div>
 
                     <button
+                      type="button"
                       className="av-add-btn"
                       onClick={() => handleAddSlot(dayKey)}
                     >
@@ -447,6 +478,7 @@ const Availability = () => {
         {/* ── Footer save ── */}
         <div className="av-footer">
           <button
+            type="button"
             className="av-save-btn av-save-lg"
             onClick={handleSave}
             disabled={saveAvailabilitySlotsResult?.isLoading}

@@ -15,6 +15,7 @@ import Global_Styles, { headerShadow } from '../utils/Global_Styles';
 import PaymentButton from '../components/payment_component/PaymentButton';
 import {
   bookingSelector,
+  profileSelector,
   useGeneratePaymentSecretMutation,
   useCreateBookingMutation,
 } from './../store/slices';
@@ -34,6 +35,7 @@ import { API_URL } from '@env';
 const Payment = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const booking = useSelector(bookingSelector);
+  const profile = useSelector(profileSelector);
   const [generatePayment, generatePaymentResult] =
     useGeneratePaymentSecretMutation();
   const [placeBooking, placeBookingResult] = useCreateBookingMutation();
@@ -43,10 +45,14 @@ const Payment = ({ navigation }) => {
     const serviceId = booking?.service?.service_id;
     const slotId = booking?.slot?.slot_id;
     const date = booking?.date;
-    if (!doctorId || !serviceId || !slotId || !date) {
+    const customerId = profile?.uid;
+
+    if (!doctorId || !serviceId || !slotId || !date || !customerId) {
       AlertNotification({
         title: 'Required field missing',
-        textBody: 'Required doctor, service, slot and date.',
+        textBody: !customerId 
+          ? 'User profile not loaded. Please re-login.' 
+          : 'Required doctor, service, slot and date.',
         variant: ALERT_DIALOG,
         type: ALERT_DANGER,
       });
@@ -72,6 +78,7 @@ const Payment = ({ navigation }) => {
     const result = await generatePayment({
       doctor_id: booking?.doctor?.uid,
       service_id: booking?.service?.service_id,
+      customer_id: profile?.uid,
     });
     if (!result?.data) {
       return;
@@ -98,6 +105,7 @@ const Payment = ({ navigation }) => {
             doctor_id: booking?.doctor?.uid,
             service_id: booking?.service?.service_id,
             slot_id: booking?.slot?.slot_id,
+            customer_id: profile?.uid,
             date: `${booking?.year}-${String(booking?.month).padStart(2, '0')}-${booking?.date}`,
             payment: {
               transaction_id: data?.razorpay_payment_id || '',
@@ -174,7 +182,7 @@ const Payment = ({ navigation }) => {
               </Text>
             </View>
           </View>
-          <Text style={styles.price}>${booking?.service?.price_amount}</Text>
+          <Text style={styles.price}>₹{booking?.service?.price}</Text>
         </View>
 
         <View style={styles.paymentMethod}>
