@@ -1,0 +1,37 @@
+# Auto-deploy the LiveKit voice agent to LiveKit Cloud on every push to main.
+# Only triggers when agent source files change.
+# Requires these GitHub secrets:
+#   LIVEKIT_URL        — wss://book-my-doc-xm5myy7p.livekit.cloud
+#   LIVEKIT_API_KEY    — your LiveKit API key
+#   LIVEKIT_API_SECRET — your LiveKit API secret
+name: Deploy LiveKit Agent
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "doctor-web/agent/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install LiveKit CLI
+        run: |
+          curl -sSL https://get.livekit.io/cli | bash
+          echo "$HOME/.livekit/bin" >> $GITHUB_PATH
+
+      - name: Deploy agent to LiveKit Cloud
+        working-directory: doctor-web/agent
+        env:
+          LIVEKIT_URL: ${{ secrets.LIVEKIT_URL }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+        run: |
+          lk agent deploy \
+            --url "$LIVEKIT_URL" \
+            --api-key "$LIVEKIT_API_KEY" \
+            --api-secret "$LIVEKIT_API_SECRET"

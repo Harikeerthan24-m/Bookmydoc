@@ -1,0 +1,16 @@
+# Auto-deploy doctor-web to Render on every push to main.
+# Requires RENDER_DEPLOY_HOOK_URL secret set in GitHub → Settings → Secrets.
+name: Deploy Web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "doctor-web/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

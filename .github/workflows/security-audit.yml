@@ -1,0 +1,29 @@
+# Security audit — runs on every push and weekly on Sunday.
+# Fails the workflow only on high or critical vulnerabilities.
+name: Security Audit
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 0 * * 0" # every Sunday at midnight UTC
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Audit doctor-web
+        working-directory: doctor-web
+        run: npm audit --audit-level=high
+
+      - name: Audit doctor-app
+        working-directory: doctor-app
+        run: npm audit --audit-level=high --legacy-peer-deps
