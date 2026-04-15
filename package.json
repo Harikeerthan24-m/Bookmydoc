@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "prepare": "husky",
     "commitlint": "commitlint --edit",
     "lint:staged": "lint-staged && npm run lint:staged --prefix doctor-web",
     "lint": "npm run lint --prefix doctor-web",
