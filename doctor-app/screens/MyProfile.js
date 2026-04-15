@@ -133,7 +133,7 @@ const MyProfile = ({ navigation }) => {
         ...state,
         file: {
           uri: file?.uri,
-          mimeType: file?.mimeType,   // e.g. "image/jpeg" — ImagePicker v14+
+          mimeType: file?.mimeType, // e.g. "image/jpeg" — ImagePicker v14+
           fileName: file?.fileName,
         },
         photoUrl: file?.uri,
@@ -171,7 +171,8 @@ const MyProfile = ({ navigation }) => {
       // React Native FormData requires { uri, type, name } as a single object (2-arg form).
       // expo-image-picker returns type:"image" (not a MIME type) — derive from mimeType or URI.
       const ext = (f.uri ?? '').split('.').pop()?.toLowerCase() ?? 'jpg';
-      const mimeType = f.mimeType ?? (ext === 'png' ? 'image/png' : 'image/jpeg');
+      const mimeType =
+        f.mimeType ?? (ext === 'png' ? 'image/png' : 'image/jpeg');
       const fileName = f.name || f.fileName || `photo.${ext}`;
       const filePayload = { uri: f.uri, type: mimeType, name: fileName };
       console.log('💾 [MyProfile] Appending file to FormData:', filePayload);
@@ -200,11 +201,16 @@ const MyProfile = ({ navigation }) => {
       console.error('❌ [MyProfile] Error message:', error?.message);
       console.error('❌ [MyProfile] Error statusCode:', error?.statusCode);
       console.error('❌ [MyProfile] Error code:', error?.error?.code);
-      console.error('❌ [MyProfile] Full error object:', JSON.stringify(error, null, 2));
+      console.error(
+        '❌ [MyProfile] Full error object:',
+        JSON.stringify(error, null, 2),
+      );
       // Always show error to user — normalised network errors have statusCode 500,
       // so the old `if (!error?.statusCode)` guard was silently swallowing them.
       const errTitle =
-        typeof error?.message === 'string' ? error.message : 'Something went wrong.';
+        typeof error?.message === 'string'
+          ? error.message
+          : 'Something went wrong.';
       const errBody =
         typeof error?.error?.message === 'string'
           ? error.error.message

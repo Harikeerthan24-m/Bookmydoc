@@ -1,6 +1,6 @@
 /**
  * Formats an ISO date string into a human-readable label: "Today", "Yesterday", or "DD/MM/YYYY".
- * @param {string} isoString 
+ * @param {string} isoString
  * @returns {string|null}
  */
 export function getDateLabel(isoString) {
@@ -27,7 +27,7 @@ export function getDateLabel(isoString) {
 
 /**
  * Transforms a flat list of messages into a list with date section headers inserted.
- * @param {Array} messages 
+ * @param {Array} messages
  * @returns {Array}
  */
 export function buildListWithDateSections(messages) {

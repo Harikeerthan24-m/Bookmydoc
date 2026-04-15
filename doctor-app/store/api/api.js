@@ -105,7 +105,10 @@ export function normalizeApiError(error) {
     };
   }
 
-  if (code === 'ERR_CANCELED' || (error.name === 'AbortError' && !error.isTimeout)) {
+  if (
+    code === 'ERR_CANCELED' ||
+    (error.name === 'AbortError' && !error.isTimeout)
+  ) {
     console.warn('[API] Request was canceled');
     return {
       statusCode: 499,
@@ -200,7 +203,9 @@ const apiClient = {
 
       if (isFormData) {
         // eslint-disable-next-line no-console
-        console.log('📦 [API] Detected FormData, removing Content-Type to allow boundary auto-generation');
+        console.log(
+          '📦 [API] Detected FormData, removing Content-Type to allow boundary auto-generation',
+        );
         delete requestHeaders['Content-Type'];
       }
 
@@ -214,20 +219,22 @@ const apiClient = {
       const response = await fetch(fullUrl, {
         method,
         headers: requestHeaders,
-        body: isFormData ? data : (data ? JSON.stringify(data) : undefined),
+        body: isFormData ? data : data ? JSON.stringify(data) : undefined,
         signal,
-      }).catch(err => {
+      }).catch((err) => {
         // eslint-disable-next-line no-console
         console.error('🔥 [API] NATIVE FETCH CRASHED:', {
           message: err.message,
           name: err.name,
-          url: fullUrl
+          url: fullUrl,
         });
         throw err;
       });
 
       // eslint-disable-next-line no-console
-      console.log(`📥 [API] ${method.toUpperCase()} ${fullUrl} -> ${response.status} ${response.statusText}`);
+      console.log(
+        `📥 [API] ${method.toUpperCase()} ${fullUrl} -> ${response.status} ${response.statusText}`,
+      );
 
       clearTimeout(timeoutId);
 
@@ -240,7 +247,9 @@ const apiClient = {
       }
 
       if (!response.ok) {
-        const error = new Error(response.statusText || `HTTP ${response.status}`);
+        const error = new Error(
+          response.statusText || `HTTP ${response.status}`,
+        );
         error.response = {
           status: response.status,
           statusText: response.statusText,
@@ -263,12 +272,16 @@ const apiClient = {
     }
   },
 
-  get: (url, config = {}) => apiClient.request({ ...config, url, method: 'GET' }),
-  post: (url, data, config = {}) => apiClient.request({ ...config, url, data, method: 'POST' }),
-  put: (url, data, config = {}) => apiClient.request({ ...config, url, data, method: 'PUT' }),
-  patch: (url, data, config = {}) => apiClient.request({ ...config, url, data, method: 'PATCH' }),
-  delete: (url, config = {}) => apiClient.request({ ...config, url, method: 'DELETE' }),
+  get: (url, config = {}) =>
+    apiClient.request({ ...config, url, method: 'GET' }),
+  post: (url, data, config = {}) =>
+    apiClient.request({ ...config, url, data, method: 'POST' }),
+  put: (url, data, config = {}) =>
+    apiClient.request({ ...config, url, data, method: 'PUT' }),
+  patch: (url, data, config = {}) =>
+    apiClient.request({ ...config, url, data, method: 'PATCH' }),
+  delete: (url, config = {}) =>
+    apiClient.request({ ...config, url, method: 'DELETE' }),
 };
 
 export default apiClient;
-

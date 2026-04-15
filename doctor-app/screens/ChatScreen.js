@@ -50,8 +50,11 @@ const ChatScreen = () => {
   const RATE_LIMIT_MS = 2000;
   const [chatMutation] = useChatMutation();
   const chatHistoryQueryArg = useMemo(() => ({ limit: PAGE_SIZE }), []);
-  const { data: chatHistoryData, isLoading: isLoadingHistory, refetch: refetchHistory } =
-    useGetChatHistoryQuery(chatHistoryQueryArg, { skip: !user?.uid });
+  const {
+    data: chatHistoryData,
+    isLoading: isLoadingHistory,
+    refetch: refetchHistory,
+  } = useGetChatHistoryQuery(chatHistoryQueryArg, { skip: !user?.uid });
   const [fetchOlderHistory] = useLazyGetChatHistoryQuery();
   const lastSyncedHistoryRef = useRef(null);
 
@@ -62,7 +65,7 @@ const ChatScreen = () => {
       if (user?.uid) {
         refetchHistory();
       }
-    }, [refetchHistory, user?.uid])
+    }, [refetchHistory, user?.uid]),
   );
 
   useEffect(() => {
@@ -74,7 +77,7 @@ const ChatScreen = () => {
     const cursor = chatHistoryData.nextCursor ?? null;
     const firstId = msgs[0]?.id;
     const syncKey = `${msgCount}-${cursor}-${firstId}`;
-    
+
     if (lastSyncedHistoryRef.current === syncKey) return;
     lastSyncedHistoryRef.current = syncKey;
 

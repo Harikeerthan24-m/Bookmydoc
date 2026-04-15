@@ -54,7 +54,14 @@ const RoomInternals = ({ onStateChange, onDoctorsFound }) => {
 
   // Debug connection state changes
   useEffect(() => {
-    console.log('[Voice] connectionState:', connectionState, '| agentState:', agentState, '| Room ready:', !!room);
+    console.log(
+      '[Voice] connectionState:',
+      connectionState,
+      '| agentState:',
+      agentState,
+      '| Room ready:',
+      !!room,
+    );
   }, [connectionState, agentState, room]);
 
   // Mic is enabled by LiveKitRoom audio={true} on SignalConnected — no manual enableMic needed.
@@ -71,7 +78,9 @@ const RoomInternals = ({ onStateChange, onDoctorsFound }) => {
       // selectAudioOutput earlier — so this is the correct moment to apply it.
       if (pub.kind === 'audio') {
         try {
-          await AudioSession.selectAudioOutput(Platform.OS === 'ios' ? 'force_speaker' : 'speaker');
+          await AudioSession.selectAudioOutput(
+            Platform.OS === 'ios' ? 'force_speaker' : 'speaker',
+          );
           console.log('[Voice] Speaker output forced.');
         } catch (err) {
           console.log('[Voice] Could not force speaker:', err);
@@ -79,19 +88,26 @@ const RoomInternals = ({ onStateChange, onDoctorsFound }) => {
       }
     };
     room.localParticipant.on(TrackEvent.LocalTrackPublished, handleLocalTrack);
-    return () => room.localParticipant.off(TrackEvent.LocalTrackPublished, handleLocalTrack);
+    return () =>
+      room.localParticipant.off(
+        TrackEvent.LocalTrackPublished,
+        handleLocalTrack,
+      );
   }, [room, onStateChange]);
 
   // Listen for agent DataPackets (e.g. "I found 3 doctors")
   useEffect(() => {
     if (!room) return;
-    
+
     const handleData = (payload, participant, kind, topic) => {
       try {
         const str = new TextDecoder().decode(payload);
         const data = JSON.parse(str);
-        
-        if (data.type === 'searching_doctors' || topic === 'searching_doctors') {
+
+        if (
+          data.type === 'searching_doctors' ||
+          topic === 'searching_doctors'
+        ) {
           if (onStateChange) onStateChange(VOICE_STATES.SEARCHING);
         } else if (data.type === 'doctors_found' || topic === 'doctors_found') {
           if (onDoctorsFound && data.count > 0) {
@@ -127,9 +143,11 @@ const RoomInternals = ({ onStateChange, onDoctorsFound }) => {
   useEffect(() => {
     if (!agentState) return;
     if (agentState === 'disconnected') onStateChange(VOICE_STATES.IDLE);
-    else if (agentState === 'connecting' || agentState === 'initializing') onStateChange(VOICE_STATES.INITIALIZING);
+    else if (agentState === 'connecting' || agentState === 'initializing')
+      onStateChange(VOICE_STATES.INITIALIZING);
     else if (agentState === 'speaking') onStateChange(VOICE_STATES.SPEAKING);
-    else if (agentState === 'thinking' || agentState === 'processing') onStateChange(VOICE_STATES.PROCESSING);
+    else if (agentState === 'thinking' || agentState === 'processing')
+      onStateChange(VOICE_STATES.PROCESSING);
     else if (agentState === 'listening') onStateChange(VOICE_STATES.LISTENING);
   }, [agentState, onStateChange]);
 
@@ -160,19 +178,28 @@ const VoiceScreen = () => {
   const [error, setError] = useState(null);
   const [connectionDetails, setConnectionDetails] = useState(null);
   const [pendingDoctorCount, setPendingDoctorCount] = useState(0);
-  
+
   const dispatch = useDispatch();
 
-  const handleDoctorsFound = useCallback((count) => {
-    setPendingDoctorCount(count);
-    // ⚡ SUPER PRE-FETCH MAGIC: 
-    // InvalidateTags only works if ChatScreen is currently mounted/subscribed.
-    // By dispatching initiate(), we force RTK Query to silently execute the network call in the background RIGHT NOW.
-    // By the time the user taps the notification, the chat history represents 0ms of wait time!
-    dispatch(AISlice.endpoints.getChatHistory.initiate({ limit: 25 }, { forceRefetch: true }));
-  }, [dispatch]);
+  const handleDoctorsFound = useCallback(
+    (count) => {
+      setPendingDoctorCount(count);
+      // ⚡ SUPER PRE-FETCH MAGIC:
+      // InvalidateTags only works if ChatScreen is currently mounted/subscribed.
+      // By dispatching initiate(), we force RTK Query to silently execute the network call in the background RIGHT NOW.
+      // By the time the user taps the notification, the chat history represents 0ms of wait time!
+      dispatch(
+        AISlice.endpoints.getChatHistory.initiate(
+          { limit: 25 },
+          { forceRefetch: true },
+        ),
+      );
+    },
+    [dispatch],
+  );
 
-  const [getRealtimeToken, { isLoading: isTokenLoading }] = useGetRealtimeTokenMutation();
+  const [getRealtimeToken, { isLoading: isTokenLoading }] =
+    useGetRealtimeTokenMutation();
 
   const scale = useRef(new Animated.Value(1)).current;
   const rotate = useRef(new Animated.Value(0)).current;
@@ -201,7 +228,7 @@ const VoiceScreen = () => {
       ios: {
         defaultOutput: 'speaker',
       },
-    }).catch(err => console.log('[Voice] Audio config error:', err));
+    }).catch((err) => console.log('[Voice] Audio config error:', err));
   }, []);
 
   useEffect(() => {
@@ -216,43 +243,91 @@ const VoiceScreen = () => {
     ) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(scale, { toValue: 1.05, duration: 1600, useNativeDriver: true }),
-          Animated.timing(scale, { toValue: 1, duration: 1600, useNativeDriver: true }),
+          Animated.timing(scale, {
+            toValue: 1.05,
+            duration: 1600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 1,
+            duration: 1600,
+            useNativeDriver: true,
+          }),
         ]),
       ).start();
     } else if (voiceState === VOICE_STATES.LISTENING) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(scale, { toValue: 1.25, duration: 350, useNativeDriver: true }),
-          Animated.timing(scale, { toValue: 1.05, duration: 350, useNativeDriver: true }),
+          Animated.timing(scale, {
+            toValue: 1.25,
+            duration: 350,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 1.05,
+            duration: 350,
+            useNativeDriver: true,
+          }),
         ]),
       ).start();
     } else if (
-      voiceState === VOICE_STATES.PROCESSING || 
+      voiceState === VOICE_STATES.PROCESSING ||
       voiceState === VOICE_STATES.SEARCHING
     ) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(scale, { toValue: 1.08, duration: 900, useNativeDriver: true }),
-          Animated.timing(scale, { toValue: 1, duration: 900, useNativeDriver: true }),
+          Animated.timing(scale, {
+            toValue: 1.08,
+            duration: 900,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 1,
+            duration: 900,
+            useNativeDriver: true,
+          }),
         ]),
       ).start();
-      Animated.loop(Animated.timing(rotate, { toValue: 1, duration: 3500, useNativeDriver: true })).start();
+      Animated.loop(
+        Animated.timing(rotate, {
+          toValue: 1,
+          duration: 3500,
+          useNativeDriver: true,
+        }),
+      ).start();
     } else if (voiceState === VOICE_STATES.SPEAKING) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(scale, { toValue: 1.2, duration: 450, useNativeDriver: true }),
-          Animated.timing(scale, { toValue: 1.02, duration: 450, useNativeDriver: true }),
+          Animated.timing(scale, {
+            toValue: 1.2,
+            duration: 450,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 1.02,
+            duration: 450,
+            useNativeDriver: true,
+          }),
         ]),
       ).start();
-      Animated.loop(Animated.timing(rotate, { toValue: 1, duration: 2200, useNativeDriver: true })).start();
+      Animated.loop(
+        Animated.timing(rotate, {
+          toValue: 1,
+          duration: 2200,
+          useNativeDriver: true,
+        }),
+      ).start();
     }
 
     return stopAnimations;
   }, [voiceState, scale, rotate, stopAnimations]);
 
   const rotateInterpolate = useMemo(
-    () => rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }),
+    () =>
+      rotate.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg'],
+      }),
     [rotate],
   );
 
@@ -280,7 +355,8 @@ const VoiceScreen = () => {
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
           {
             title: 'Microphone Permission',
-            message: 'Book My Doctor needs access to your microphone so you can talk to the AI assistant.',
+            message:
+              'Book My Doctor needs access to your microphone so you can talk to the AI assistant.',
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
@@ -320,7 +396,9 @@ const VoiceScreen = () => {
   }[voiceState];
 
   const voiceOrb = (
-    <Animated.View style={{ transform: [{ scale }, { rotate: rotateInterpolate }] }}>
+    <Animated.View
+      style={{ transform: [{ scale }, { rotate: rotateInterpolate }] }}
+    >
       <Svg width={circleSize} height={circleSize}>
         <Defs>
           <RadialGradient id="voiceGradient" cx="50%" cy="40%" r="50%">
@@ -330,7 +408,12 @@ const VoiceScreen = () => {
             <Stop offset="100%" stopColor="#2e7dd6" stopOpacity="1" />
           </RadialGradient>
         </Defs>
-        <Circle cx={circleSize / 2} cy={circleSize / 2} r={circleSize / 2 - 2} fill="url(#voiceGradient)" />
+        <Circle
+          cx={circleSize / 2}
+          cy={circleSize / 2}
+          r={circleSize / 2 - 2}
+          fill="url(#voiceGradient)"
+        />
       </Svg>
     </Animated.View>
   );
@@ -354,7 +437,10 @@ const VoiceScreen = () => {
               AudioSession.stopAudioSession().catch(() => {});
             }}
           >
-            <RoomInternals onStateChange={setVoiceState} onDoctorsFound={handleDoctorsFound} />
+            <RoomInternals
+              onStateChange={setVoiceState}
+              onDoctorsFound={handleDoctorsFound}
+            />
             {voiceOrb}
           </LiveKitRoom>
         ) : (
@@ -363,9 +449,17 @@ const VoiceScreen = () => {
       </View>
 
       <View style={styles.statusContainer}>
-        {isTokenLoading && <Text style={styles.statusText}>Initializing AI...</Text>}
-        {!isTokenLoading && <Text style={styles.statusText}>{statusLabel}</Text>}
-        {error && <Text style={[styles.statusText, { color: 'red', marginTop: 10 }]}>{error}</Text>}
+        {isTokenLoading && (
+          <Text style={styles.statusText}>Initializing AI...</Text>
+        )}
+        {!isTokenLoading && (
+          <Text style={styles.statusText}>{statusLabel}</Text>
+        )}
+        {error && (
+          <Text style={[styles.statusText, { color: 'red', marginTop: 10 }]}>
+            {error}
+          </Text>
+        )}
       </View>
 
       {pendingDoctorCount > 0 && (
@@ -379,14 +473,19 @@ const VoiceScreen = () => {
         >
           <Ionicons name="chatbubbles" size={20} color="#fff" />
           <Text style={styles.resultsNudgeText}>
-            I found {pendingDoctorCount} doctor{pendingDoctorCount !== 1 ? 's' : ''} for you. Tap to see them in Chat →
+            I found {pendingDoctorCount} doctor
+            {pendingDoctorCount !== 1 ? 's' : ''} for you. Tap to see them in
+            Chat →
           </Text>
         </TouchableOpacity>
       )}
 
       <View style={styles.bottomRow}>
         <TouchableOpacity
-          style={[styles.actionButton, connectionDetails && styles.micActiveButton]}
+          style={[
+            styles.actionButton,
+            connectionDetails && styles.micActiveButton,
+          ]}
           activeOpacity={0.7}
           onPress={handleMicPress}
         >
@@ -442,7 +541,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  micActiveButton: { backgroundColor: '#fff', borderColor: '#2e7dd6', borderWidth: 2 },
+  micActiveButton: {
+    backgroundColor: '#fff',
+    borderColor: '#2e7dd6',
+    borderWidth: 2,
+  },
 });
 
 export default VoiceScreen;

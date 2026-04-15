@@ -50,8 +50,8 @@ const Payment = ({ navigation }) => {
     if (!doctorId || !serviceId || !slotId || !date || !customerId) {
       AlertNotification({
         title: 'Required field missing',
-        textBody: !customerId 
-          ? 'User profile not loaded. Please re-login.' 
+        textBody: !customerId
+          ? 'User profile not loaded. Please re-login.'
           : 'Required doctor, service, slot and date.',
         variant: ALERT_DIALOG,
         type: ALERT_DANGER,

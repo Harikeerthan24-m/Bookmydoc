@@ -249,12 +249,19 @@ const DoctorAppointment = ({
           return (
             <View key={'day_part' + index} style={styles.slotGroup}>
               <View style={styles.slotGroupHeader}>
-                <Ionicons 
-                  name={slotItem.day_part === 'Morning' ? 'sunny-outline' : 'moon-outline'} 
-                  size={18} 
-                  color={Global_Styles.PrimaryColour} 
+                <Ionicons
+                  name={
+                    slotItem.day_part === 'Morning'
+                      ? 'sunny-outline'
+                      : 'moon-outline'
+                  }
+                  size={18}
+                  color={Global_Styles.PrimaryColour}
                 />
-                <Text style={styles.dayPartText}> {slotItem?.day_part} Slots</Text>
+                <Text style={styles.dayPartText}>
+                  {' '}
+                  {slotItem?.day_part} Slots
+                </Text>
               </View>
               <View style={styles.timeSlotsGrid}>
                 {slotItem?.slots.map((slot, sIdx) => {
@@ -262,11 +269,17 @@ const DoctorAppointment = ({
                   return (
                     <TouchableOpacity
                       key={'slot' + sIdx}
-                      style={[styles.timeSlotChip, isActive && styles.activeChip]}
+                      style={[
+                        styles.timeSlotChip,
+                        isActive && styles.activeChip,
+                      ]}
                       onPress={() => dispatch(setBooking({ slot }))}
                     >
                       <Text
-                        style={[styles.timeSlotChipText, isActive && styles.activeChipText]}
+                        style={[
+                          styles.timeSlotChipText,
+                          isActive && styles.activeChipText,
+                        ]}
                       >
                         {formatTime(slot?.start_time)}
                       </Text>

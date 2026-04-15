@@ -139,7 +139,6 @@ const Search = ({ onSearch, onSpecialistsSelected }) => {
     }
   };
 
-
   const handleAnalyze = async () => {
     if (!inputText.trim()) {
       setError('Please describe your symptoms or problem');
