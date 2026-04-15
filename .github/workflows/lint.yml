@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Install doctor-app deps
-        run: npm ci --prefix doctor-app
+        run: npm i --prefix doctor-app --legacy-peer-deps
 
       - name: Install doctor-web deps
         run: npm ci --prefix doctor-web
