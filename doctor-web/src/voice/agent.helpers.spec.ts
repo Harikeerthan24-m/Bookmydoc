@@ -60,8 +60,11 @@ describe('agent.helpers', () => {
         doctorId: 'doc1',
         name: 'Dr. Smith',
         specialization: 'Cardiologist',
-        location: 'New York',
+        location: { city: 'New York', address: '', state: '' },
         rating: 4.8,
+        experience: '',
+        photoUrl: '',
+        registrationNumber: '',
       });
     });
 
@@ -88,7 +91,11 @@ describe('agent.helpers', () => {
       const results = await searchDoctorsInFirestore(mockDb, 'General');
 
       expect(results[0].name).toBe('Doctor');
-      expect(results[0].location).toBe('Remote');
+      expect(results[0].location).toEqual({
+        city: 'Remote',
+        address: '',
+        state: '',
+      });
       expect(results[0].rating).toBe(5);
     });
   });
