@@ -110,6 +110,7 @@ export class ChatResponseDto {
   @ApiPropertyOptional({
     description: 'Extracted patient information',
     type: 'object',
+    additionalProperties: true,
   })
   extractedInfo?: {
     symptoms?: string[];
