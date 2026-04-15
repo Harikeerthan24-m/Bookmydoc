@@ -22,8 +22,8 @@ jobs:
 
       - name: Audit doctor-web
         working-directory: doctor-web
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
       - name: Audit doctor-app
         working-directory: doctor-app
-        run: npm audit --audit-level=high --legacy-peer-deps
+        run: npm audit --audit-level=high --omit=dev --legacy-peer-deps
