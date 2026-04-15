@@ -93,9 +93,11 @@ const apiClient = {
 
       if (!response.ok) {
         if (responseData) {
+          // eslint-disable-next-line no-throw-literal
           throw responseData;
         }
         const statusCode = response.status || 500;
+        // eslint-disable-next-line no-throw-literal
         throw {
           statusCode,
           data: null,
@@ -119,6 +121,7 @@ const apiClient = {
       }
 
       // Handle network errors or other fetch exceptions
+      // eslint-disable-next-line no-throw-literal
       throw {
         statusCode: 500,
         data: null,

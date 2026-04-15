@@ -192,7 +192,6 @@ const Availability = () => {
 
     setAvailability((prev) => {
       const updatedAvailability = { ...prev };
-      const dayName = prev[sourceDayKey].day;
 
       Object.keys(updatedAvailability).forEach((dayKey) => {
         updatedAvailability[dayKey] = {
