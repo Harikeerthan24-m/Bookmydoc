@@ -14,7 +14,9 @@ import { Transform, Type } from 'class-transformer';
 export class ProfileDto {
   @IsOptional()
   @IsString()
-  @ApiPropertyOptional({ description: 'The unique identification of the profile' })
+  @ApiPropertyOptional({
+    description: 'The unique identification of the profile',
+  })
   uid?: string;
 
   @IsOptional()

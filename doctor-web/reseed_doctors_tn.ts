@@ -119,10 +119,11 @@ async function reseed() {
       const service1 = {
         service_id: serviceId1,
         doctor_id: uid,
-        name: 'General Consultation',
-        description: `Standard consultation with ${fullName}`,
+        name: 'Quick Consultation',
+        description: 'Custom consultation type',
         type: 'General',
-        price: 200 + Math.floor(Math.random() * 300),
+        price: 200,
+        duration: 20,
       };
       batch.set(db.collection('services').doc(serviceId1), service1);
 
@@ -133,33 +134,34 @@ async function reseed() {
         name: `${specialty} Specialist Visit`,
         description: `Specialized ${specialty} consultation and checkup`,
         type: 'Specialist',
-        price: 500 + Math.floor(Math.random() * 1000),
+        price: 500,
+        duration: 30,
       };
       batch.set(db.collection('services').doc(serviceId2), service2);
 
       // 4. Generate Availability Slots
-      for (const day of DAYS) {
-        // Morning slot
+      for (const day of ['Sunday', 'Monday', 'Wednesday', 'Friday']) {
+        // Morning block matching user request
         const slotId1 = uuidv4();
         batch.set(db.collection('availabilitySlots').doc(slotId1), {
           slot_id: slotId1,
-          uid,
-          day,
-          start_time: '09:00',
-          end_time: '10:00',
-          duration: 60,
+          doctor_id: uid,
+          day: day.toLowerCase(),
+          start_time: day === 'Sunday' ? '09:00' : '10:00',
+          end_time: day === 'Sunday' ? '12:00' : '11:00',
+          status: 'available',
           created_at: new Date().toISOString(),
         });
 
-        // Evening slot
+        // Evening block
         const slotId2 = uuidv4();
         batch.set(db.collection('availabilitySlots').doc(slotId2), {
           slot_id: slotId2,
-          uid,
-          day,
+          doctor_id: uid,
+          day: day.toLowerCase(),
           start_time: '17:00',
-          end_time: '18:00',
-          duration: 60,
+          end_time: '20:00',
+          status: 'available',
           created_at: new Date().toISOString(),
         });
       }

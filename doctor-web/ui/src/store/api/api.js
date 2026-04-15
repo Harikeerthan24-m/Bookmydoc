@@ -49,7 +49,9 @@ const apiClient = {
 
     try {
       // Build full URL
-      let fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url.replace(/^\//, '')}`;
+      let fullUrl = url.startsWith('http')
+        ? url
+        : `${API_BASE_URL}${url.replace(/^\//, '')}`;
       if (params && Object.keys(params).length > 0) {
         const queryStrings = Object.entries(params)
           .filter(([_, v]) => v != null)
@@ -75,7 +77,7 @@ const apiClient = {
       const response = await fetch(fullUrl, {
         method,
         headers: requestHeaders,
-        body: isFormData ? data : (data ? JSON.stringify(data) : undefined),
+        body: isFormData ? data : data ? JSON.stringify(data) : undefined,
         signal,
       });
 
@@ -115,7 +117,7 @@ const apiClient = {
       if (error.statusCode) {
         throw error;
       }
-      
+
       // Handle network errors or other fetch exceptions
       throw {
         statusCode: 500,
@@ -126,12 +128,16 @@ const apiClient = {
     }
   },
 
-  get: (url, config = {}) => apiClient.request({ ...config, url, method: 'GET' }),
-  post: (url, data, config = {}) => apiClient.request({ ...config, url, data, method: 'POST' }),
-  put: (url, data, config = {}) => apiClient.request({ ...config, url, data, method: 'PUT' }),
-  patch: (url, data, config = {}) => apiClient.request({ ...config, url, data, method: 'PATCH' }),
-  delete: (url, config = {}) => apiClient.request({ ...config, url, method: 'DELETE' }),
+  get: (url, config = {}) =>
+    apiClient.request({ ...config, url, method: 'GET' }),
+  post: (url, data, config = {}) =>
+    apiClient.request({ ...config, url, data, method: 'POST' }),
+  put: (url, data, config = {}) =>
+    apiClient.request({ ...config, url, data, method: 'PUT' }),
+  patch: (url, data, config = {}) =>
+    apiClient.request({ ...config, url, data, method: 'PATCH' }),
+  delete: (url, config = {}) =>
+    apiClient.request({ ...config, url, method: 'DELETE' }),
 };
 
 export default apiClient;
-

@@ -179,7 +179,7 @@ const Availability = () => {
 
   const handleCopyToAllDays = (e, sourceDayKey) => {
     if (e) e.preventDefault();
-    
+
     const sourceSlots = availability[sourceDayKey].timeSlots;
     if (!sourceSlots || sourceSlots.length === 0) {
       ToastMessage({
@@ -193,7 +193,7 @@ const Availability = () => {
     setAvailability((prev) => {
       const updatedAvailability = { ...prev };
       const dayName = prev[sourceDayKey].day;
-      
+
       Object.keys(updatedAvailability).forEach((dayKey) => {
         updatedAvailability[dayKey] = {
           ...updatedAvailability[dayKey],
@@ -201,14 +201,14 @@ const Availability = () => {
           // Deep copy and update day, remove IDs so they are treated as new on save
           timeSlots: sourceSlots.map((slot) => {
             const { slot_id, id, ...rest } = slot;
-            return { 
-              ...rest, 
-              day: dayKey 
+            return {
+              ...rest,
+              day: dayKey,
             };
           }),
         };
       });
-      
+
       return updatedAvailability;
     });
 

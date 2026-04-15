@@ -41,12 +41,13 @@ export class DoctorService {
     if (filters?.location) {
       const searchLoc = filters.location.trim().toLowerCase();
       const locationField = data?.location;
-      
+
       let locationText = '';
       if (typeof locationField === 'string') {
         locationText = locationField.toLowerCase();
       } else if (typeof locationField === 'object' && locationField !== null) {
-        locationText = `${locationField.city || ''} ${locationField.address || ''} ${locationField.state || ''}`.toLowerCase();
+        locationText =
+          `${locationField.city || ''} ${locationField.address || ''} ${locationField.state || ''}`.toLowerCase();
       }
 
       if (!locationText.includes(searchLoc)) {
@@ -154,7 +155,8 @@ export class DoctorService {
     if (typeof locationField === 'string') {
       locationText = locationField.toLowerCase();
     } else if (typeof locationField === 'object' && locationField !== null) {
-      locationText = `${locationField.city || ''} ${locationField.address || ''} ${locationField.state || ''}`.toLowerCase();
+      locationText =
+        `${locationField.city || ''} ${locationField.address || ''} ${locationField.state || ''}`.toLowerCase();
     }
     if (locationText.includes(cleanSearchText)) {
       return true;
@@ -266,20 +268,42 @@ export class DoctorService {
       doctorResults.sort((a, b) => {
         const aDisplayName = (a?.display_name || '').toLowerCase();
         const bDisplayName = (b?.display_name || '').toLowerCase();
-        const aCleanName = aDisplayName.replace(/^(dr\.?|doctor)\s*/i, '').trim();
-        const bCleanName = bDisplayName.replace(/^(dr\.?|doctor)\s*/i, '').trim();
+        const aCleanName = aDisplayName
+          .replace(/^(dr\.?|doctor)\s*/i, '')
+          .trim();
+        const bCleanName = bDisplayName
+          .replace(/^(dr\.?|doctor)\s*/i, '')
+          .trim();
 
         // 1. Exact name matches (ignore title)
         if (aCleanName === cleanSearch && bCleanName !== cleanSearch) return -1;
         if (bCleanName === cleanSearch && aCleanName !== cleanSearch) return 1;
 
         // 2. Prefix name matches
-        if (aCleanName.startsWith(cleanSearch) && !bCleanName.startsWith(cleanSearch)) return -1;
-        if (bCleanName.startsWith(cleanSearch) && !aCleanName.startsWith(cleanSearch)) return 1;
+        if (
+          aCleanName.startsWith(cleanSearch) &&
+          !bCleanName.startsWith(cleanSearch)
+        )
+          return -1;
+        if (
+          bCleanName.startsWith(cleanSearch) &&
+          !aCleanName.startsWith(cleanSearch)
+        )
+          return 1;
 
         // 3. Match in expertise at word start
-        const aExpertiseMatch = (a?.expertiseList || []).some(ex => ex.toLowerCase().split(/\s+/).some(w => w.startsWith(cleanSearch)));
-        const bExpertiseMatch = (b?.expertiseList || []).some(ex => ex.toLowerCase().split(/\s+/).some(w => w.startsWith(cleanSearch)));
+        const aExpertiseMatch = (a?.expertiseList || []).some((ex) =>
+          ex
+            .toLowerCase()
+            .split(/\s+/)
+            .some((w) => w.startsWith(cleanSearch)),
+        );
+        const bExpertiseMatch = (b?.expertiseList || []).some((ex) =>
+          ex
+            .toLowerCase()
+            .split(/\s+/)
+            .some((w) => w.startsWith(cleanSearch)),
+        );
         if (aExpertiseMatch && !bExpertiseMatch) return -1;
         if (bExpertiseMatch && !aExpertiseMatch) return 1;
 
@@ -288,8 +312,8 @@ export class DoctorService {
       });
     } else {
       // Default: Sort alphabetically by display name
-      doctorResults.sort((a, b) => 
-        (a?.display_name || '').localeCompare(b?.display_name || '')
+      doctorResults.sort((a, b) =>
+        (a?.display_name || '').localeCompare(b?.display_name || ''),
       );
     }
 
